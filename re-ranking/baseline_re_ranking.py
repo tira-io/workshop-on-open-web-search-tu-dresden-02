@@ -7,20 +7,23 @@ import pyterrier as pt
 if not pt.started():
   pt.init()
 
+import sys
+sys.path.insert(0, '/home/trec-cast-tools/corpus_processing/')
+from passage_chunkers import spacy_passage_chunker
+
 def split_into_snippets(document_text):
-    pass
+    chunker = spacy_passage_chunker.SpacyPassageChunker()
+    return chunker.process_batch([{
+            "id" : 0,
+            "url": '',
+            "title" : '',
+            "contents" : document_text
+        }])[0]['contents']
 
 def transform_snippet_format(snippets):
     df = pd.DataFrame({
-                    'docno':
-                    ['1', '2', '3', '4', '5', '6'],
-                    'text':
-                    ['Wow information retrieval at the TU Dresden is really fun!',
-                    'The waves were crashing on the shore; it was like a retrieval of water',
-                    'The body may perhaps money compensates for the loss of information',
-                    'Where can apes retrieve bananas from trees?',
-                    'What is the difference between an banana and a bananana?',
-                    'retrieval is nice with pyterrier',]
+                    'docno': [str(snippet['id']) for snippet in snippets],
+                    'text': [snippet['body'] for snippet in snippets]
                     })
     return df
 
@@ -55,7 +58,7 @@ if __name__ == '__main__':
 
     # Alternatively, you could use the scored docs of ir_datasets, e.g.:
     # from tira.third_party_integrations import ir_dataset
-    # dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
+    # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
     document_snippets = []
 
