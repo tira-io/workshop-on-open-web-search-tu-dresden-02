@@ -1,6 +1,6 @@
 {
   "build": {
-    "dockerfile": "dev-container/Dockerfile"
+    "dockerfile": "re-ranking/Dockerfile"
   },
   "customizations": {
     "vscode": {
