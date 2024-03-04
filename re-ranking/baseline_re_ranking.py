@@ -44,7 +44,12 @@ def rank_snippets(query, snippets_df):
     if os.path.exists('pd_index'):
     # Remove the directory and all its contents
         shutil.rmtree('pd_index')
-    return bm25.search(query)
+
+    result = bm25.search(query)
+
+    # TODO: Change data structure of result to match [{'snippet_score':1, 'snippet_text': 'ddsfds'}, {'snippet_score':0.9, 'snippet_text': 'a'}]
+
+    return result
 
 def find_top_snippets(query, document_text):
     # First: split document_text into snippets
@@ -59,11 +64,10 @@ def find_top_snippets(query, document_text):
     # Third: rank snippets
 
     ranking = rank_snippets(query, snippets_df)
-    
-    # Return values
-    #return ranking
-    return [{'snippet_score':1, 'snippet_text': 'ddsfds'}, {'snippet_score':10.9, 'snippet_text': 'a'}, ]
 
+    # Return values
+    return ranking
+    
 if __name__ == '__main__':
     # In the TIRA sandbox, this is the injected re-ranking dataset, injected via the environment variable TIRA_INPUT_DIRECTORY
     re_rank_dataset = load_rerank_data(default='workshop-on-open-web-search/re-ranking-20231027-training')
