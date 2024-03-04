@@ -2,6 +2,8 @@
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
 from tira.third_party_integrations import load_rerank_data, persist_and_normalize_run
 from pathlib import Path
+import os
+import shutil
 import pandas as pd
 import pyterrier as pt
 if not pt.started():
@@ -28,11 +30,21 @@ def transform_snippet_format(snippets):
     return df
 
 def rank_snippets(query, snippets_df):
+    if os.path.exists('pd_index'):
+    # Remove the directory and all its contents
+        shutil.rmtree('pd_index')
     pd_indexer = pt.DFIndexer("./pd_index")
     indexref3 = pd_indexer.index(snippets_df["text"], snippets_df["docno"])
     index = pt.IndexFactory.of(indexref3)
     bm25 = pt.BatchRetrieve(index, controls = {"wmodel": "BM25"})
-    bm25.search("retrieval")
+    #print(query)
+
+    #remove ? due to error in terrier query parser
+    query = query.replace('?', '')
+    if os.path.exists('pd_index'):
+    # Remove the directory and all its contents
+        shutil.rmtree('pd_index')
+    return bm25.search(query)
 
 def find_top_snippets(query, document_text):
     # First: split document_text into snippets
@@ -46,7 +58,7 @@ def find_top_snippets(query, document_text):
 
     # Third: rank snippets
 
-    #ranking = rank_snippets(query, snippets_df)
+    ranking = rank_snippets(query, snippets_df)
     
     # Return values
     #return ranking
