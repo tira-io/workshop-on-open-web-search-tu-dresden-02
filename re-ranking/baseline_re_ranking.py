@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
+import sys
+sys.path.insert(0,'/workspaces/trec-cast-tools/corpus_processing') # TODO: in Dockerfile moven, wenn chunking tools dort installiert werden? 
+
 from tira.third_party_integrations import load_rerank_data, persist_and_normalize_run
 from pathlib import Path
 import pandas as pd
+from passage_chunkers import PassageChunker
 
 def split_into_snippets(document_text):
     pass
