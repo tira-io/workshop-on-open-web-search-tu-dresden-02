@@ -16,6 +16,6 @@ RUN pip install -r /home/trec-cast-tools/corpus_processing/requirements.txt
 ENV PYTHONPATH "${PYTHONPATH}:/home/trec-cast-tools/corpus_processing/"
 
 
-ADD baseline_re_ranking.py /code/baseline_re_ranking.py
+ADD re-ranking/baseline_re_ranking.py /code/baseline_re_ranking.py
 
 ENTRYPOINT [ "python3", "/code/baseline_re_ranking.py" ]
