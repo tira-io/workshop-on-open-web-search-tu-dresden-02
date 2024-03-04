@@ -15,7 +15,7 @@ def split_into_snippets(document_text):
             "url": '',
             "title" : '',
             "contents" : document_text
-        }])['contents']
+        }])[0]['contents']
 
 def transform_snippet_format(snippets):
     df = pd.DataFrame({
