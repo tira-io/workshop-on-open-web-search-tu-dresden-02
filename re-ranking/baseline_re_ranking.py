@@ -46,11 +46,11 @@ def find_top_snippets(query, document_text):
 
     # Third: rank snippets
 
-    ranking = rank_snippets(query, snippets_df)
+    #ranking = rank_snippets(query, snippets_df)
     
     # Return values
-    return ranking
-    #return [{'snippet_score':1, 'snippet_text': 'ddsfds'}, {'snippet_score':10.9, 'snippet_text': 'a'}, ]
+    #return ranking
+    return [{'snippet_score':1, 'snippet_text': 'ddsfds'}, {'snippet_score':10.9, 'snippet_text': 'a'}, ]
 
 if __name__ == '__main__':
     # In the TIRA sandbox, this is the injected re-ranking dataset, injected via the environment variable TIRA_INPUT_DIRECTORY
