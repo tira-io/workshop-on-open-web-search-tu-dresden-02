@@ -3,15 +3,33 @@
 from tira.third_party_integrations import load_rerank_data, persist_and_normalize_run
 from pathlib import Path
 import pandas as pd
+import pyterrier as pt
+if not pt.started():
+  pt.init()
 
 def split_into_snippets(document_text):
     pass
 
 def transform_snippet_format(snippets):
-    pass
+    df = pd.DataFrame({
+                    'docno':
+                    ['1', '2', '3', '4', '5', '6'],
+                    'text':
+                    ['Wow information retrieval at the TU Dresden is really fun!',
+                    'The waves were crashing on the shore; it was like a retrieval of water',
+                    'The body may perhaps money compensates for the loss of information',
+                    'Where can apes retrieve bananas from trees?',
+                    'What is the difference between an banana and a bananana?',
+                    'retrieval is nice with pyterrier',]
+                    })
+    return df
 
-def rank_snippets(query, snippets):
-    pass
+def rank_snippets(query, snippets_df):
+    pd_indexer = pt.DFIndexer("./pd_index")
+    indexref3 = pd_indexer.index(snippets_df["text"], snippets_df["docno"])
+    index = pt.IndexFactory.of(indexref3)
+    bm25 = pt.BatchRetrieve(index, controls = {"wmodel": "BM25"})
+    bm25.search("retrieval")
 
 def find_top_snippets(query, document_text):
     # First: split document_text into snippets
@@ -21,12 +39,12 @@ def find_top_snippets(query, document_text):
 
     # Second: transform snippet format from output of split_into_snippets to input of rank_snippets
 
-    snippets = transform_snippet_format(snippets)
+    snippets_df = transform_snippet_format(snippets)
 
     # Third: rank snippets
 
-    ranking = rank_snippets(query, snippets)
-
+    ranking = rank_snippets(query, snippets_df)
+    
     # Return values
     return ranking
     #return [{'snippet_score':1, 'snippet_text': 'ddsfds'}, {'snippet_score':10.9, 'snippet_text': 'a'}, ]
