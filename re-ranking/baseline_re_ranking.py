@@ -3,6 +3,9 @@
 from tira.third_party_integrations import load_rerank_data, persist_and_normalize_run
 from pathlib import Path
 import pandas as pd
+
+import sys
+sys.path.insert(0, '/home/trec-cast-tools/corpus_processing/')
 from passage_chunkers import spacy_passage_chunker
 
 def split_into_snippets(document_text):
