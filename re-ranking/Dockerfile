@@ -20,4 +20,4 @@ ENV PYTHONPATH "${PYTHONPATH}:/home/trec-cast-tools/corpus_processing/"
 #ADD re-ranking/baseline_re_ranking.py /code/baseline_re_ranking.py 
 
 # TODO: fix
-#ENTRYPOINT [ "python3", "/code/baseline_re_ranking.py" ] # TODO: fix
+#ENTRYPOINT [ "python3", "/code/baseline_re_ranking.py" ]
