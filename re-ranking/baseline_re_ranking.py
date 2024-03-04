@@ -5,7 +5,14 @@ from pathlib import Path
 import pandas as pd
 
 def find_top_snippets(query, document_text):
-    # Our baseline re-ranker just emits 1 + the score of the previous ranker.
+    # First: split document_text into snippets
+    # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
+
+
+    # Second: rank snippets 
+
+
+    # Return values
     return [{'snippet_score':1, 'snippet_text': 'ddsfds'}, {'snippet_score':10.9, 'snippet_text': 'a'}, ]
 
 if __name__ == '__main__':
