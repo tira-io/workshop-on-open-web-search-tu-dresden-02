@@ -6,10 +6,16 @@ sys.path.insert(0,'/workspaces/trec-cast-tools/corpus_processing') # TODO: in Do
 from tira.third_party_integrations import load_rerank_data, persist_and_normalize_run
 from pathlib import Path
 import pandas as pd
-from passage_chunkers import PassageChunker
+from passage_chunkers import spacy_passage_chunker
 
 def split_into_snippets(document_text):
-    pass
+    chunker = spacy_passage_chunker.SpacyPassageChunker()
+    return chunker.process_batch([{
+            "id" : 0,
+            "url": '',
+            "title" : '',
+            "contents" : document_text
+        }])
 
 def transform_snippet_format(snippets):
     pass
@@ -41,7 +47,7 @@ if __name__ == '__main__':
 
     # Alternatively, you could use the scored docs of ir_datasets, e.g.:
     # from tira.third_party_integrations import ir_dataset
-    # dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
+    # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
     document_snippets = []
 
