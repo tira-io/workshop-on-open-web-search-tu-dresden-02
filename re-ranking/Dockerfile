@@ -1,5 +1,5 @@
-#docker build -t webis/wows-2024-baseline:0.0.1 .
-FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+#see https://github.com/OpenWebSearch/wows-code/tree/main/ecir24/baselines/dev-container
+FROM webis/wows-2024-baseline:0.0.5
 
 ENV PYTERRIER_VERSION='5.8'
 ENV PYTERRIER_HELPER_VERSION='0.0.8'
