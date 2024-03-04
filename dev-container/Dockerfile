@@ -10,4 +10,6 @@ RUN apt-get update \
 	&& python3 -c "import pyterrier as pt; pt.init(version='${PYTERRIER_VERSION}', helper_version='${PYTERRIER_HELPER_VERSION}');" \
 	&& python3 -c "import pyterrier as pt; pt.init(version='${PYTERRIER_VERSION}', helper_version='${PYTERRIER_HELPER_VERSION}', boot_packages=['com.github.terrierteam:terrier-prf:-SNAPSHOT']);"
 
-
+# install trec-cast-tools for chunking of documents
+RUN cd /home && git clone https://github.com/grill-lab/trec-cast-tools.git
+RUN pip install -r /home/trec-cast-tools/corpus_processing/requirements.txt
