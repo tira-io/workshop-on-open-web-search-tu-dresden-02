@@ -13,3 +13,4 @@ RUN apt-get update \
 # install trec-cast-tools for chunking of documents
 RUN cd /home && git clone https://github.com/grill-lab/trec-cast-tools.git
 RUN pip install -r /home/trec-cast-tools/corpus_processing/requirements.txt
+ENV PYTHONPATH "${PYTHONPATH}:/home/trec-cast-tools/corpus_processing/"

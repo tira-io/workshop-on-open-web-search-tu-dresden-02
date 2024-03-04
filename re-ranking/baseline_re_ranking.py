@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
 from tira.third_party_integrations import load_rerank_data, persist_and_normalize_run
+from passage_chunkers import spacy_passage_chunker
 from pathlib import Path
 import os
 import shutil
@@ -8,10 +9,6 @@ import pandas as pd
 import pyterrier as pt
 if not pt.started():
   pt.init()
-
-import sys
-sys.path.insert(0, '/home/trec-cast-tools/corpus_processing/')
-from passage_chunkers import spacy_passage_chunker
 
 def split_into_snippets(document_text):
     chunker = spacy_passage_chunker.SpacyPassageChunker()
