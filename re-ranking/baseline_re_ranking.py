@@ -15,10 +15,14 @@ def split_into_snippets(document_text):
             "url": '',
             "title" : '',
             "contents" : document_text
-        }])
+        }])['contents']
 
 def transform_snippet_format(snippets):
-    pass
+    df = pd.DataFrame({
+                    'docno': [str(snippet['id']) for snippet in snippets],
+                    'text': [snippet['body'] for snippet in snippets]
+                    })
+    return df
 
 def rank_snippets(query, snippets):
     pass
