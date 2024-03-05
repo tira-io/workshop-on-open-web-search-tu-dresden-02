@@ -22,6 +22,9 @@ RUN pip install --upgrade git+https://github.com/terrierteam/pyterrier_colbert.g
 # install pytest
 RUN pip install pytest approvaltests
 
+#install sentence transformers
+RUN pip install sentence_transformers
+
 ADD snippet_generation.py /code/snippet_generation.py
 
 ENTRYPOINT [ "python3", "/code/baseline_re_ranking.py" ]
