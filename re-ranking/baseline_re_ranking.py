@@ -5,10 +5,10 @@ import sys
 
 #!git -C ColBERT/ pull || git clone https://github.com/stanford-futuredata/ColBERT.git
 sys.path.insert(0, 'ColBERT/')
-import colbert
-from colbert import Indexer, Searcher
-from colbert.infra import Run, RunConfig, ColBERTConfig
-from colbert.data import Queries, Collection
+#import colbert
+#from colbert import Indexer, Searcher
+#from colbert.infra import Run, RunConfig, ColBERTConfig
+#from colbert.data import Queries, Collection
 
 import pandas as pd
 import pyterrier as pt
@@ -118,9 +118,8 @@ def find_top_snippets(query, document_text, ranker = 'BM25'):
     if ranker == 'BM25':
         ranking = rank_snippets_BM25(query, snippets_df)
     elif ranker == 'ColBERT':
-        pass
         #non functional
-        #ranking = rank_snippets_ColBERT(query, snippets_df)
+        ranking = rank_snippets_trColBERT(query, snippets_df)
 
 
 
