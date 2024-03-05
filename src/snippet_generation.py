@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import argparse
 import shutil
 
 import pandas as pd
@@ -57,6 +58,7 @@ def rank_snippets_lexical(query, snippets_df, ranker):
 
     return result_list.tolist()
 
+
 def crossencode(query, top_k_snippets):
     top_k_texts = [d['text'] for d in top_k_snippets]
     model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512)
@@ -64,6 +66,7 @@ def crossencode(query, top_k_snippets):
     scores = model.predict(pairs)
     reranked_top_k = [{'score': scores[i], 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
     return reranked_top_k
+
 
 def colbert_pipeline(docs_df: pd.DataFrame, query):
     colbert_model = pyterrier_dr.TctColBert('sentence-transformers/all-MiniLM-L12-v2')
@@ -81,7 +84,8 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
     return result_list.tolist()
 
-def find_top_snippets(query, document_text, ranker = 'Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
+
+def find_top_snippets(query, document_text, ranker='Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
 
@@ -99,12 +103,26 @@ def find_top_snippets(query, document_text, ranker = 'Tf', max_snippets=3, snipp
             ranking = crossencode(query, ranking[0:max_snippets])
     elif ranker == 'ColBERT':
         #non functional
-        ranking = colbert_pipeline(snippets_df,[query])
+        ranking = colbert_pipeline(snippets_df, [query])
         if use_crossencoder:
             ranking = crossencode(query, ranking[0:max_snippets])
 
     # Return values
     return ranking[0:max_snippets]
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Argument Parser")
+
+    parser.add_argument("--retrieval", choices=["BM25", "PL2", "Tf", "ColBERT"], default="Tf", help="The retrieval "
+                                                                                                    "model")
+    parser.add_argument("--cross-encode", action="store_true", default=False, help="Use a cross-encoder to re-rank "
+                                                                                   "the top-k passages of the "
+                                                                                   "retrieval model")
+    parser.add_argument("--snippet-size", default=250, help="The approximate size of created snippets")
+    parser.add_argument("--top-snippets", default=3, help="Number k for top k snippets that are retrieved.")
+
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
@@ -115,12 +133,15 @@ if __name__ == '__main__':
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
-    for ranker in ['ColBERT']:
-        for use_crossencoder in [False, True]:
-            document_snippets = []
-            for _, i in re_rank_dataset.iterrows():
-                document_snippets += [
-                    {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], ranker=ranker, use_crossencoder=use_crossencoder)}]
+    args = parse_arguments()
+    document_snippets = []
+    for _, i in re_rank_dataset.iterrows():
+        document_snippets += [
+            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
+                                                                                 args.top_snippets, args.snippet_size,
+                                                                                 args.cross_encode)}]
 
-            document_snippets = pd.DataFrame(document_snippets)
-            document_snippets.to_json(f'./snippets_{ranker}_crossencoder_{use_crossencoder}.jsonl.gz', lines=True, orient='records')
+    document_snippets = pd.DataFrame(document_snippets)
+    document_snippets.to_json(f'./snippets_{args.retrieval}_crossencoder{args.cross_encode}_'
+                              f'snippets-size{args.snippet_size}_top-snippets{args.top_snippets}.jsonl.gz',
+                              lines=True, orient='records')
