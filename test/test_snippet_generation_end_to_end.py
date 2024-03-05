@@ -1,7 +1,7 @@
 import unittest
 from approvaltests import verify_as_json
 import json
-from src.baseline_re_ranking import find_top_snippets
+from src.snippet_generation import find_top_snippets
 
 
 class EndToEndSnippetGeneratorTest(unittest.TestCase):

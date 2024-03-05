@@ -1,6 +1,6 @@
 import unittest
 from approvaltests import verify_as_json
-from src.baseline_re_ranking import split_into_snippets, transform_snippet_format
+from src.snippet_generation import split_into_snippets, transform_snippet_format
 
 
 class SnippetGeneratorIOTest(unittest.TestCase):
