@@ -19,6 +19,8 @@ ENV PYTHONPATH "${PYTHONPATH}:/home/trec-cast-tools/corpus_processing/"
 # install colbert
 RUN pip install --upgrade git+https://github.com/terrierteam/pyterrier_colbert.git
 
+# install pytest
+RUN pip install pytest approvaltests
 
 ADD baseline_re_ranking.py /code/baseline_re_ranking.py
 
