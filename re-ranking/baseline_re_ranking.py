@@ -48,6 +48,13 @@ def rank_snippets(query, snippets_df):
 
     result = bm25.search(query)
 
+    merged_df = pd.merge(snippets_df, result, on='docno')
+
+    # Convert to list of dictionaries
+    result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text']}, axis=1).tolist()
+
+    print(result_list)
+
     # TODO: Change data structure of result to match [{'snippet_score':1, 'snippet_text': 'ddsfds'}, {'snippet_score':0.9, 'snippet_text': 'a'}]
 
     return result
