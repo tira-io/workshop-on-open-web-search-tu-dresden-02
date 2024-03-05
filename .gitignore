@@ -10,3 +10,6 @@ rerank.jsonl.gz
 
 # vscode settings
 .vscode
+
+#colbert indes
+*.npy
