@@ -4,13 +4,13 @@ import shutil
 
 import pandas as pd
 import pyterrier as pt
+
+from sentence_transformers import CrossEncoder
 from passage_chunkers import spacy_passage_chunker
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
 from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded
 
 ensure_pyterrier_is_loaded()
-
-import pyterrier_colbert.ranking
 
 def split_into_snippets(document_text):
     chunker = spacy_passage_chunker.SpacyPassageChunker()
@@ -63,7 +63,17 @@ def rank_snippets_ColBERT(query, snippets_df):
     print(result)
     return result
 
-def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3):
+def crossencode(query, top_k_snippets):
+    top_k_texts = [d['text'] for d in top_k_snippets]
+    model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512)
+    pairs = [(query, doc) for doc in top_k_texts]
+    scores = model.predict(pairs)
+    reranked_top_k = [{'score': scores[i] , 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
+    df_reranked_top_k = pd.DataFrame(reranked_top_k)
+    print(df_reranked_top_k)
+    return df_reranked_top_k
+
+def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3, useCrossencoder=True):
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
 
@@ -82,9 +92,9 @@ def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3):
         #non functional
         #ranking = rank_snippets_ColBERT(query, snippets_df)
 
-
-
     # Return values
+    print(ranking[0:maxSnippets])
+    crossencode(query, ranking[0:maxSnippets])
     return ranking[0:maxSnippets]
 
 
