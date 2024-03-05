@@ -1,3 +1,4 @@
+# docker build -t bla re-ranking
 #see https://github.com/OpenWebSearch/wows-code/tree/main/ecir24/baselines/dev-container
 FROM webis/wows-2024-baseline:0.0.5
 
@@ -16,8 +17,6 @@ RUN pip install -r /home/trec-cast-tools/corpus_processing/requirements.txt
 ENV PYTHONPATH "${PYTHONPATH}:/home/trec-cast-tools/corpus_processing/"
 
 
-# TODO: fix
-#ADD re-ranking/baseline_re_ranking.py /code/baseline_re_ranking.py 
+ADD baseline_re_ranking.py /code/baseline_re_ranking.py
 
-# TODO: fix
-#ENTRYPOINT [ "python3", "/code/baseline_re_ranking.py" ]
+ENTRYPOINT [ "python3", "/code/baseline_re_ranking.py" ]
