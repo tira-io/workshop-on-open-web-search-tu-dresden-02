@@ -26,5 +26,6 @@ RUN pip3 install git+https://github.com/terrierteam/pyterrier_dr.git
 RUN pip install pytest approvaltests
 
 ADD snippet_generation.py /code/snippet_generation.py
+ADD parameterized_spacy_passage_chunker.py /code/parameterized_spacy_passage_chunker.py
 
 ENTRYPOINT [ "python3", "/code/snippet_generation.py" ]

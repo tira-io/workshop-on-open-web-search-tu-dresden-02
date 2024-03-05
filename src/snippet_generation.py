@@ -7,14 +7,15 @@ import pyterrier as pt
 import pyterrier_dr
 
 from sentence_transformers import CrossEncoder
-from passage_chunkers import spacy_passage_chunker
+from parameterized_spacy_passage_chunker import ParameterizedSpacyPassageChunker
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
 from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded
 
 ensure_pyterrier_is_loaded()
 
-def split_into_snippets(document_text):
-    chunker = spacy_passage_chunker.SpacyPassageChunker()
+
+def split_into_snippets(document_text, snippet_size=250):
+    chunker = ParameterizedSpacyPassageChunker(snippet_size)
     return chunker.process_batch([{
         "id": 0,
         "url": '',
@@ -58,18 +59,19 @@ def rank_snippets_lexical(query, snippets_df, ranker):
 
 
 def rank_snippets_ColBERT(query, snippets_df):
-    checkpoint="http://www.dcs.gla.ac.uk/~craigm/colbert.dnn.zip"
+    checkpoint = "http://www.dcs.gla.ac.uk/~craigm/colbert.dnn.zip"
     factory = pyterrier_colbert.ranking.ColBERTFactory(checkpoint, None, None)
     result = factory.explain_text("why did the us voluntarily enter ww1", "the USA entered ww2 because of pearl harbor")
     print(result)
     return result
+
 
 def crossencode(query, top_k_snippets):
     top_k_texts = [d['text'] for d in top_k_snippets]
     model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512)
     pairs = [(query, doc) for doc in top_k_texts]
     scores = model.predict(pairs)
-    reranked_top_k = [{'score': scores[i] , 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
+    reranked_top_k = [{'score': scores[i], 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
     return reranked_top_k
 
 def colbert_pipeline(docs: list, topics: pd.DataFrame):
@@ -84,11 +86,11 @@ def colbert_pipeline(docs: list, topics: pd.DataFrame):
     print(dense_result)
     return dense_result
 
-def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3, useCrossencoder=True):
+def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3, snippet_size=250, useCrossencoder=True):
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
 
-    snippets = split_into_snippets(document_text)
+    snippets = split_into_snippets(document_text, snippet_size)
 
     # Second: transform snippet format from output of split_into_snippets to input of rank_snippets
 
@@ -98,15 +100,15 @@ def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3, useCro
 
     if ranker in ('BM25', 'PL2', 'Tf'):
         ranking = rank_snippets_lexical(query, snippets_df, ranker)
-        if useCrossencoder:
-            ranking = crossencode(query, ranking[0:maxSnippets])
+        if use_crossencoder:
+            ranking = crossencode(query, ranking[0:max_snippets])
     elif ranker == 'ColBERT':
         #non functional
         #colbert_pipeline()
         pass
 
     # Return values
-    return ranking[0:maxSnippets]
+    return ranking[0:max_snippets]
 
 
 if __name__ == '__main__':
@@ -121,7 +123,7 @@ if __name__ == '__main__':
 
     for _, i in re_rank_dataset.iterrows():
         document_snippets += [
-            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'],'BM25',True)}]
+            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], 'BM25', True)}]
 
     document_snippets = pd.DataFrame(document_snippets)
     document_snippets.to_json('./re-rank.jsonl.gz', lines=True, orient='records')
