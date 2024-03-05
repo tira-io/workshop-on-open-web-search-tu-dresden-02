@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-# Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
-from tira.third_party_integrations import load_rerank_data, persist_and_normalize_run
-from passage_chunkers import spacy_passage_chunker
-from pathlib import Path
 import os
 import shutil
+
 import pandas as pd
 import pyterrier as pt
+from passage_chunkers import spacy_passage_chunker
+# Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
+from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded
 
-if not pt.started():
-    pt.init()
+ensure_pyterrier_is_loaded()
 
 import pyterrier_colbert.ranking
 
@@ -29,6 +28,7 @@ def transform_snippet_format(snippets):
         'text': [snippet['body'] for snippet in snippets]
     })
     return df
+
 
 def rank_snippets_BM25(query, snippets_df):
     if os.path.exists('pd_index'):
@@ -53,6 +53,7 @@ def rank_snippets_BM25(query, snippets_df):
     result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text']}, axis=1).tolist()
 
     return result
+
 
 def rank_snippets_ColBERT(query, snippets_df):
     checkpoint="http://www.dcs.gla.ac.uk/~craigm/colbert.dnn.zip"
