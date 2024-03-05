@@ -119,8 +119,8 @@ def parse_arguments():
     parser.add_argument("--cross-encode", action="store_true", default=False, help="Use a cross-encoder to re-rank "
                                                                                    "the top-k passages of the "
                                                                                    "retrieval model")
-    parser.add_argument("--snippet-size", default=250, help="The approximate size of created snippets")
-    parser.add_argument("--top-snippets", default=3, help="Number k for top k snippets that are retrieved.")
+    parser.add_argument("--snippet-size", default=250, type=int, help="The approximate size of created snippets")
+    parser.add_argument("--top-snippets", default=3, type=int, help="Number k for top k snippets that are retrieved.")
 
     return parser.parse_args()
 
