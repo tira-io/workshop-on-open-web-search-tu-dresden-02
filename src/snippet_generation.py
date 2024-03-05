@@ -66,19 +66,23 @@ def crossencode(query, top_k_snippets):
     return reranked_top_k
 
 def colbert_pipeline(docs_df: pd.DataFrame, query):
-    topics =pd.DataFrame({'qid':1, 'query': query})
-    docs = docs_df.apply(lambda row: {'docno': row['docno'], 'text': row['text']}, axis=1)
     colbert_model = pyterrier_dr.TctColBert('sentence-transformers/all-MiniLM-L12-v2')
-    colbert_index = pyterrier_dr.NumpyIndex('./colbert_index.np', overwrite=True)
-    idx_pipeline = colbert_model >> colbert_index
-    idx_pipeline.index(docs)
-    # create retrieval pipeline and run on topics
-    retr_pipeline = colbert_model >> colbert_index
+    docs_df['qid'] = '0'
+    docs_df['query'] = query
+    #print(docs_df)
+    result_df = colbert_model(docs_df)
+    #print(result_df)
+    merged_df = pd.merge(docs_df, result_df, on='docno')
+    merged_df = merged_df.sort_values('score', ascending=False)
+    #print(merged_df)
 
-    retr_pipeline.search('Hello Terrier')
-    dense_result = retr_pipeline(topics)
+    # Convert to list of dictionaries
+    result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text_x']}, axis=1)
 
-    return dense_result
+    return result_list.tolist()
+
+
+    return 
 
 def find_top_snippets(query, document_text, ranker = 'Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
     # First: split document_text into snippets
@@ -113,7 +117,7 @@ if __name__ == '__main__':
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
-    for ranker in ['PL2', 'Tf', 'BM25']:
+    for ranker in ['ColBERT']:
         for use_crossencoder in [False, True]:
             document_snippets = []
             for _, i in re_rank_dataset.iterrows():
