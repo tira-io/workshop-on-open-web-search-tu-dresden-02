@@ -81,9 +81,6 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
     return result_list.tolist()
 
-
-    return 
-
 def find_top_snippets(query, document_text, ranker = 'Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
@@ -103,7 +100,6 @@ def find_top_snippets(query, document_text, ranker = 'Tf', max_snippets=3, snipp
     elif ranker == 'ColBERT':
         #non functional
         ranking = colbert_pipeline(snippets_df,[query])
-        pass
 
     # Return values
     return ranking[0:max_snippets]
