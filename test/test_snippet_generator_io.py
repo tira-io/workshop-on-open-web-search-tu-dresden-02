@@ -1,6 +1,6 @@
 import unittest
 from approvaltests import verify_as_json
-from re_ranking.baseline_re_ranking import split_into_snippets
+from re_ranking.baseline_re_ranking import split_into_snippets, transform_snippet_format
 
 
 class SnippetGeneratorIOTest(unittest.TestCase):
@@ -19,6 +19,12 @@ class SnippetGeneratorIOTest(unittest.TestCase):
 
     def test_split_into_snippets_output(self):
         actual = [split_into_snippets(document) for document in self.test_documents]
+        verify_as_json(actual)
+
+    def test_transform_snippet_format_output(self):
+        snippets = [[{'id': 0, 'body': self.test_documents[i]}] for i in range(len(self.test_documents))]
+
+        actual = [str(transform_snippet_format(snippet)) for snippet in snippets]
         verify_as_json(actual)
 
 
