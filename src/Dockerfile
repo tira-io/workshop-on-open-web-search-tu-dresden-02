@@ -23,7 +23,8 @@ RUN pip install sentence_transformers
 RUN pip3 install git+https://github.com/terrierteam/pyterrier_dr.git
 
 # install pytest
-RUN pip install pytest approvaltests
+RUN pip install pytest approvaltests \
+	&& python3 -c "from sentence_transformers import CrossEncoder; print(CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512))"
 
 ADD snippet_generation.py /code/snippet_generation.py
 ADD parameterized_spacy_passage_chunker.py /code/parameterized_spacy_passage_chunker.py
