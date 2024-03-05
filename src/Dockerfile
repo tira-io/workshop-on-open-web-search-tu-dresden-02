@@ -26,5 +26,6 @@ RUN pip install pytest approvaltests
 RUN pip install sentence_transformers
 
 ADD snippet_generation.py /code/snippet_generation.py
+ADD parameterized_spacy_passage_chunker.py /code/parameterized_spacy_passage_chunker.py
 
 ENTRYPOINT [ "python3", "/code/snippet_generation.py" ]
