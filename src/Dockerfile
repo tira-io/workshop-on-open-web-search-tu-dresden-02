@@ -16,14 +16,14 @@ RUN cd /home && git clone https://github.com/grill-lab/trec-cast-tools.git
 RUN pip install -r /home/trec-cast-tools/corpus_processing/requirements.txt
 ENV PYTHONPATH "${PYTHONPATH}:/home/trec-cast-tools/corpus_processing/"
 
+#install sentence transformers
+RUN pip install sentence_transformers
+
 # install colbert
-RUN pip install --upgrade git+https://github.com/terrierteam/pyterrier_colbert.git
+RUN pip3 install git+https://github.com/terrierteam/pyterrier_dr.git
 
 # install pytest
 RUN pip install pytest approvaltests
-
-#install sentence transformers
-RUN pip install sentence_transformers
 
 ADD snippet_generation.py /code/snippet_generation.py
 
