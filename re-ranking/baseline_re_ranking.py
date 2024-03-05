@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 import os
 import shutil
+import sys
+
+#!git -C ColBERT/ pull || git clone https://github.com/stanford-futuredata/ColBERT.git
+sys.path.insert(0, 'ColBERT/')
+import colbert
+from colbert import Indexer, Searcher
+from colbert.infra import Run, RunConfig, ColBERTConfig
+from colbert.data import Queries, Collection
 
 import pandas as pd
 import pyterrier as pt
@@ -55,10 +63,43 @@ def rank_snippets_BM25(query, snippets_df):
     return result
 
 
-def rank_snippets_ColBERT(query, snippets_df):
+def rank_snippets_trColBERT(query, snippets_df):
     checkpoint="http://www.dcs.gla.ac.uk/~craigm/colbert.dnn.zip"
-    factory = pyterrier_colbert.ranking.ColBERTFactory(checkpoint, None, None)
+    factory = pyterrier_colbert.ranking.ColBERTFactory(checkpoint, None, None, gpu = False)
     result = factory.explain_text("why did the us voluntarily enter ww1", "the USA entered ww2 because of pearl harbor")
+    print(result)
+    return result
+
+def rank_snippets_ColBERT(query, snippets_df):
+    #indexer
+    n_gpu: int = 1  # Set your number of available GPUs
+    experiment: str = "newex"  # Name of the folder where the logs and created indices will be stored
+    index_name: str = "new"
+    with Run().context(RunConfig(nranks=n_gpu, experiment=experiment)):
+        config = ColBERTConfig(
+          doc_maxlen=300  # Our model supports 8k context length for indexing long documents
+        )
+        indexer = Indexer(
+          checkpoint="colbert-ir/colbertv2.0",
+          config=config,
+        )
+        documents = []
+        indexer.index(name=index_name, collection=documents)
+    
+    #searcher 
+    n_gpu: int = 0
+    k: int = 10  # how many results you want to retrieve
+
+    with Run().context(RunConfig(nranks=n_gpu, experiment=experiment)):
+        config = ColBERTConfig(
+          query_maxlen=128  # Although the model supports 8k context length, we suggest not to use a very long query, as it may cause significant computational complexity and CUDA memory usage.
+        )
+        searcher = Searcher(
+          index=index_name, 
+          config=config
+        )  # You don't need to specify the checkpoint again, the model name is stored in the index.
+        query = "How to use ColBERT for indexing long documents?"
+        result = searcher.search(query, k=k)
     print(result)
     return result
 
