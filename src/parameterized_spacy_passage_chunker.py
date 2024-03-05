@@ -1,3 +1,6 @@
+# adapted from passage_chunkers.spacy_passage_chunker
+# https://github.com/grill-lab/trec-cast-tools/blob/master/corpus_processing/passage_chunkers/spacy_passage_chunker.py
+
 import spacy
 from tqdm import tqdm
 
@@ -10,10 +13,18 @@ nlp.max_length = 2000000  # for documents that are longer than the spacy charact
 
 
 class ParameterizedSpacyPassageChunker(AbstractPassageChunker):
+    """
+    Basically the same as #SpacyPassageChunker. Only difference is that the snippet size can be set in #__init__
+    """
     def __init__(self, snippet_size=250):
         self.snippet_size = snippet_size
 
-    def process_batch(self, document_batch) -> None:
+    def process_batch(self, document_batch: list[dict]) -> list[dict]:
+        """
+        Divides the documents of the given document list into snippets.
+        :param document_batch: List of documents. Documents are dicts - content must be at 'contents' key.
+        :return: List of documents. Documents are dicts - snippets can be found at 'contents' key.
+        """
         batch_document_texts = [document['contents'] for document in document_batch]
         processed_document_texts = nlp.pipe(batch_document_texts, n_process=1)
 

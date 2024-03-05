@@ -113,11 +113,12 @@ if __name__ == '__main__':
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
-    document_snippets = []
+    for ranker in ['PL2', 'Tf', 'BM25']:
+        for use_crossencoder in [False, True]:
+            document_snippets = []
+            for _, i in re_rank_dataset.iterrows():
+                document_snippets += [
+                    {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], ranker=ranker, use_crossencoder=use_crossencoder)}]
 
-    for _, i in re_rank_dataset.iterrows():
-        document_snippets += [
-            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], 'BM25', True)}]
-
-    document_snippets = pd.DataFrame(document_snippets)
-    document_snippets.to_json('./re-rank.jsonl.gz', lines=True, orient='records')
+            document_snippets = pd.DataFrame(document_snippets)
+            document_snippets.to_json(f'./snippets_{ranker}_crossencoder_{use_crossencoder}.jsonl.gz', lines=True, orient='records')
