@@ -30,14 +30,14 @@ def transform_snippet_format(snippets):
     return df
 
 
-def rank_snippets_BM25(query, snippets_df):
+def rank_snippets_lexical(query, snippets_df, ranker):
     if os.path.exists('pd_index'):
         # Remove the directory and all its contents
         shutil.rmtree('pd_index')
     pd_indexer = pt.DFIndexer("./pd_index")
     indexref3 = pd_indexer.index(snippets_df["text"], snippets_df["docno"])
     index = pt.IndexFactory.of(indexref3)
-    bm25 = pt.BatchRetrieve(index, controls={"wmodel": "BM25"})
+    retrieved = pt.BatchRetrieve(index, controls={"wmodel": ranker})
 
     #remove ? due to error in terrier query parser
     query = query.replace('?', '')
@@ -45,14 +45,15 @@ def rank_snippets_BM25(query, snippets_df):
         # Remove the directory and all its contents
         shutil.rmtree('pd_index')
 
-    result = bm25.search(query)
+    result = retrieved.search(query)
 
     merged_df = pd.merge(snippets_df, result, on='docno')
+    merged_df = merged_df.sort_values('score', ascending=False)
 
     # Convert to list of dictionaries
-    result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text']}, axis=1).tolist()
+    result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text']}, axis=1)
 
-    return result_list
+    return result_list.tolist()
 
 
 def rank_snippets_ColBERT(query, snippets_df):
@@ -62,7 +63,7 @@ def rank_snippets_ColBERT(query, snippets_df):
     print(result)
     return result
 
-def find_top_snippets(query, document_text, ranker = 'BM25'):
+def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3):
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
 
@@ -74,8 +75,8 @@ def find_top_snippets(query, document_text, ranker = 'BM25'):
 
     # Third: rank snippets
 
-    if ranker == 'BM25':
-        ranking = rank_snippets_BM25(query, snippets_df)
+    if ranker in ('BM25', 'PL2', 'Tf'):
+        ranking = rank_snippets_lexical(query, snippets_df, ranker)
     elif ranker == 'ColBERT':
         pass
         #non functional
@@ -84,7 +85,7 @@ def find_top_snippets(query, document_text, ranker = 'BM25'):
 
 
     # Return values
-    return ranking
+    return ranking[0:maxSnippets]
 
 
 if __name__ == '__main__':
