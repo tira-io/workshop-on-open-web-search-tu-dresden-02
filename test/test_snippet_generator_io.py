@@ -17,10 +17,8 @@ test_documents = [
 class SnippetGeneratorIOTest(unittest.TestCase):
     @staticmethod
     def test_split_into_snippets_output():
-        for document in test_documents:
-            actual = {'id': 0, 'body': document}
-
-            verify_as_json(actual)
+        actual = [{'id': 0, 'body': document} for document in test_documents]
+        verify_as_json(actual)
 
 
 if __name__ == '__main__':
