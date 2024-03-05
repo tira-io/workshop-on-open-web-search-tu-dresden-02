@@ -57,15 +57,6 @@ def rank_snippets_lexical(query, snippets_df, ranker):
 
     return result_list.tolist()
 
-
-def rank_snippets_ColBERT(query, snippets_df):
-    checkpoint = "http://www.dcs.gla.ac.uk/~craigm/colbert.dnn.zip"
-    factory = pyterrier_colbert.ranking.ColBERTFactory(checkpoint, None, None)
-    result = factory.explain_text("why did the us voluntarily enter ww1", "the USA entered ww2 because of pearl harbor")
-    print(result)
-    return result
-
-
 def crossencode(query, top_k_snippets):
     top_k_texts = [d['text'] for d in top_k_snippets]
     model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512)
