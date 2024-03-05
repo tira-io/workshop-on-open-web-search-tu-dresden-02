@@ -4,6 +4,7 @@ import shutil
 
 import pandas as pd
 import pyterrier as pt
+import pyterrier_dr
 
 from sentence_transformers import CrossEncoder
 from passage_chunkers import spacy_passage_chunker
@@ -71,6 +72,18 @@ def crossencode(query, top_k_snippets):
     reranked_top_k = [{'score': scores[i] , 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
     return reranked_top_k
 
+def colbert_pipeline(docs: list, topics: pd.DataFrame):
+
+    colbert_model = pyterrier_dr.TctColBert('sentence-transformers/all-MiniLM-L12-v2')
+    colbert_index = pyterrier_dr.NumpyIndex('./colbert_index.np', overwrite=True)
+    idx_pipeline = colbert_model >> colbert_index
+    idx_pipeline.index(docs)
+    # create retrieval pipeline and run on topics
+    retr_pipeline = colbert_model >> colbert_index
+    dense_result = retr_pipeline(topics)
+    print(dense_result)
+    return dense_result
+
 def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3, useCrossencoder=True):
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
@@ -88,9 +101,9 @@ def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3, useCro
         if useCrossencoder:
             ranking = crossencode(query, ranking[0:maxSnippets])
     elif ranker == 'ColBERT':
-        pass
         #non functional
-        #ranking = rank_snippets_ColBERT(query, snippets_df)
+        #colbert_pipeline()
+        pass
 
     # Return values
     return ranking[0:maxSnippets]
