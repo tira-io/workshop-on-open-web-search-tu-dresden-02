@@ -8,5 +8,5 @@
 # vscode settings
 .vscode
 
-#colbert indes
-*.npy
+#colbert indexes
+*.np
