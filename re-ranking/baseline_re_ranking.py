@@ -29,8 +29,7 @@ def transform_snippet_format(snippets):
     })
     return df
 
-
-def rank_snippets(query, snippets_df):
+def rank_snippets_BM25(query, snippets_df):
     if os.path.exists('pd_index'):
         # Remove the directory and all its contents
         shutil.rmtree('pd_index')
@@ -38,7 +37,6 @@ def rank_snippets(query, snippets_df):
     indexref3 = pd_indexer.index(snippets_df["text"], snippets_df["docno"])
     index = pt.IndexFactory.of(indexref3)
     bm25 = pt.BatchRetrieve(index, controls={"wmodel": "BM25"})
-    #print(query)
 
     #remove ? due to error in terrier query parser
     query = query.replace('?', '')
@@ -53,12 +51,11 @@ def rank_snippets(query, snippets_df):
     # Convert to list of dictionaries
     result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text']}, axis=1).tolist()
 
-    print(result_list)
-
-    # TODO: Change data structure of result to match [{'snippet_score':1, 'snippet_text': 'ddsfds'}, {'snippet_score':0.9, 'snippet_text': 'a'}]
-
     return result
 
+def rank_snippets_ColBERT(query, snippets_df):
+
+    pass
 
 def find_top_snippets(query, document_text):
     # First: split document_text into snippets
@@ -72,7 +69,7 @@ def find_top_snippets(query, document_text):
 
     # Third: rank snippets
 
-    ranking = rank_snippets(query, snippets_df)
+    ranking = rank_snippets_BM25(query, snippets_df)
 
     # Return values
     return ranking

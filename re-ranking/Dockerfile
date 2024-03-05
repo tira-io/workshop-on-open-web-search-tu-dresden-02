@@ -16,6 +16,9 @@ RUN cd /home && git clone https://github.com/grill-lab/trec-cast-tools.git
 RUN pip install -r /home/trec-cast-tools/corpus_processing/requirements.txt
 ENV PYTHONPATH "${PYTHONPATH}:/home/trec-cast-tools/corpus_processing/"
 
+# install colbert
+RUN pip install --upgrade git+https://github.com/terrierteam/pyterrier_colbert.git
+
 
 ADD baseline_re_ranking.py /code/baseline_re_ranking.py
 
