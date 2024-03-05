@@ -24,4 +24,4 @@ RUN pip install pytest approvaltests
 
 ADD snippet_generation.py /code/snippet_generation.py
 
-ENTRYPOINT [ "python3", "/code/baseline_re_ranking.py" ]
+ENTRYPOINT [ "python3", "/code/snippet_generation.py" ]
