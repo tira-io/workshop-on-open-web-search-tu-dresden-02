@@ -100,6 +100,8 @@ def find_top_snippets(query, document_text, ranker = 'Tf', max_snippets=3, snipp
     elif ranker == 'ColBERT':
         #non functional
         ranking = colbert_pipeline(snippets_df,[query])
+        if use_crossencoder:
+            ranking = crossencode(query, ranking[0:max_snippets])
 
     # Return values
     return ranking[0:max_snippets]
