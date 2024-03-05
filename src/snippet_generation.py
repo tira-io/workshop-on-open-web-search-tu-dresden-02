@@ -65,16 +65,19 @@ def crossencode(query, top_k_snippets):
     reranked_top_k = [{'score': scores[i], 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
     return reranked_top_k
 
-def colbert_pipeline(docs: list, topics: pd.DataFrame):
-
+def colbert_pipeline(docs_df: pd.DataFrame, query):
+    topics =pd.DataFrame({'qid':1, 'query': query})
+    docs = docs_df.apply(lambda row: {'docno': row['docno'], 'text': row['text']}, axis=1)
     colbert_model = pyterrier_dr.TctColBert('sentence-transformers/all-MiniLM-L12-v2')
     colbert_index = pyterrier_dr.NumpyIndex('./colbert_index.np', overwrite=True)
     idx_pipeline = colbert_model >> colbert_index
     idx_pipeline.index(docs)
     # create retrieval pipeline and run on topics
     retr_pipeline = colbert_model >> colbert_index
+
+    retr_pipeline.search('Hello Terrier')
     dense_result = retr_pipeline(topics)
-    print(dense_result)
+
     return dense_result
 
 def find_top_snippets(query, document_text, ranker = 'Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
@@ -95,7 +98,7 @@ def find_top_snippets(query, document_text, ranker = 'Tf', max_snippets=3, snipp
             ranking = crossencode(query, ranking[0:max_snippets])
     elif ranker == 'ColBERT':
         #non functional
-        #colbert_pipeline()
+        ranking = colbert_pipeline(snippets_df,[query])
         pass
 
     # Return values
