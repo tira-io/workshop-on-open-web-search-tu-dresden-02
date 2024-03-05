@@ -1,2 +1,8 @@
 # output file
 re-rank.jsonl.gz
+
+# test data file
+rerank.jsonl.gz
+
+# pycache
+*/__pycache__
