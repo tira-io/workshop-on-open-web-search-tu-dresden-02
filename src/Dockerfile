@@ -1,4 +1,4 @@
-# docker build -t bla re_ranking
+# docker build -t bla src
 #see https://github.com/OpenWebSearch/wows-code/tree/main/ecir24/baselines/dev-container
 FROM webis/wows-2024-baseline:0.0.5
 
