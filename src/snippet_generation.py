@@ -2,6 +2,7 @@
 import os
 import argparse
 import shutil
+from pathlib import Path
 
 import pandas as pd
 import pyterrier as pt
@@ -10,7 +11,7 @@ import pyterrier_dr
 from sentence_transformers import CrossEncoder
 from parameterized_spacy_passage_chunker import ParameterizedSpacyPassageChunker
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
-from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded
+from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded, get_output_directory
 
 ensure_pyterrier_is_loaded()
 
@@ -142,6 +143,9 @@ if __name__ == '__main__':
                                                                                  args.cross_encode)}]
 
     document_snippets = pd.DataFrame(document_snippets)
-    document_snippets.to_json(f'./snippets_{args.retrieval}_crossencoder{args.cross_encode}_'
-                              f'snippets-size{args.snippet_size}_top-snippets{args.top_snippets}.jsonl.gz',
-                              lines=True, orient='records')
+
+    # The expected output directory, injected via the environment variable TIRA_OUTPUT_DIRECTORY
+    output_dir = get_output_directory('.')
+
+    output_file = Path(output_dir) / 'documents.jsonl.gz'
+    document_snippets.to_json(output_file, lines=True, orient='records')
