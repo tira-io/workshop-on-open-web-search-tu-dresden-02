@@ -6,3 +6,7 @@ rerank.jsonl.gz
 
 # pycache
 */__pycache__
+.pytest_cache
+
+# vscode settings
+.vscode
