@@ -11,6 +11,7 @@ import pyterrier as pt
 if not pt.started():
     pt.init()
 
+import pyterrier_colbert.ranking
 
 def split_into_snippets(document_text):
     chunker = spacy_passage_chunker.SpacyPassageChunker()
@@ -54,10 +55,13 @@ def rank_snippets_BM25(query, snippets_df):
     return result
 
 def rank_snippets_ColBERT(query, snippets_df):
+    checkpoint="http://www.dcs.gla.ac.uk/~craigm/colbert.dnn.zip"
+    factory = pyterrier_colbert.ranking.ColBERTFactory(checkpoint, None, None)
+    result = factory.explain_text("why did the us voluntarily enter ww1", "the USA entered ww2 because of pearl harbor")
+    print(result)
+    return result
 
-    pass
-
-def find_top_snippets(query, document_text):
+def find_top_snippets(query, document_text, ranker = 'BM25'):
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
 
@@ -69,7 +73,14 @@ def find_top_snippets(query, document_text):
 
     # Third: rank snippets
 
-    ranking = rank_snippets_BM25(query, snippets_df)
+    if ranker == 'BM25':
+        ranking = rank_snippets_BM25(query, snippets_df)
+    elif ranker == 'ColBERT':
+        pass
+        #non functional
+        #ranking = rank_snippets_ColBERT(query, snippets_df)
+
+
 
     # Return values
     return ranking
@@ -87,7 +98,7 @@ if __name__ == '__main__':
 
     for _, i in re_rank_dataset.iterrows():
         document_snippets += [
-            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'])}]
+            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'],'BM25')}]
 
     document_snippets = pd.DataFrame(document_snippets)
     document_snippets.to_json('./re-rank.jsonl.gz', lines=True, orient='records')
