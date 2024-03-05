@@ -1,5 +1,6 @@
 import unittest
 from approvaltests import verify_as_json
+from re_ranking.baseline_re_ranking import split_into_snippets
 
 test_documents = [
     "The Hubble telescope discovered two moons of Pluto, Nix and Hydra.",
@@ -17,7 +18,7 @@ test_documents = [
 class SnippetGeneratorIOTest(unittest.TestCase):
     @staticmethod
     def test_split_into_snippets_output():
-        actual = [{'id': 0, 'body': document} for document in test_documents]
+        actual = [split_into_snippets(document) for document in test_documents]
         verify_as_json(actual)
 
 
