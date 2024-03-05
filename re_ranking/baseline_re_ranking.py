@@ -52,7 +52,7 @@ def rank_snippets_BM25(query, snippets_df):
     # Convert to list of dictionaries
     result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text']}, axis=1).tolist()
 
-    return result
+    return result_list
 
 
 def rank_snippets_ColBERT(query, snippets_df):
