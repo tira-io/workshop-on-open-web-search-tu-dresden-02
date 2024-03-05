@@ -69,9 +69,7 @@ def crossencode(query, top_k_snippets):
     pairs = [(query, doc) for doc in top_k_texts]
     scores = model.predict(pairs)
     reranked_top_k = [{'score': scores[i] , 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
-    df_reranked_top_k = pd.DataFrame(reranked_top_k)
-    print(df_reranked_top_k)
-    return df_reranked_top_k
+    return reranked_top_k
 
 def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3, useCrossencoder=True):
     # First: split document_text into snippets
@@ -87,14 +85,14 @@ def find_top_snippets(query, document_text, ranker = 'Tf', maxSnippets=3, useCro
 
     if ranker in ('BM25', 'PL2', 'Tf'):
         ranking = rank_snippets_lexical(query, snippets_df, ranker)
+        if useCrossencoder:
+            ranking = crossencode(query, ranking[0:maxSnippets])
     elif ranker == 'ColBERT':
         pass
         #non functional
         #ranking = rank_snippets_ColBERT(query, snippets_df)
 
     # Return values
-    print(ranking[0:maxSnippets])
-    crossencode(query, ranking[0:maxSnippets])
     return ranking[0:maxSnippets]
 
 
@@ -110,7 +108,7 @@ if __name__ == '__main__':
 
     for _, i in re_rank_dataset.iterrows():
         document_snippets += [
-            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'],'BM25')}]
+            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'],'BM25',True)}]
 
     document_snippets = pd.DataFrame(document_snippets)
     document_snippets.to_json('./re-rank.jsonl.gz', lines=True, orient='records')
