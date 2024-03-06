@@ -4,6 +4,8 @@ import argparse
 import shutil
 from pathlib import Path
 
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
 import pandas as pd
 import pyterrier as pt
 import pyterrier_dr
@@ -62,9 +64,20 @@ def rank_snippets_lexical(query, snippets_df, ranker):
 
 def crossencode(query, top_k_snippets):
     top_k_texts = [d['text'] for d in top_k_snippets]
-    model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512)
+    #model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512)
     pairs = [(query, doc) for doc in top_k_texts]
-    scores = model.predict(pairs)
+
+    model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+    tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+    features = tokenizer(pairs,  padding=True, truncation=True, return_tensors="pt")
+
+    model.eval()
+    with torch.no_grad():
+        scores = model(**features).logits
+        scores = scores.flatten().tolist()
+
+    #scores = model.predict(pairs)
     reranked_top_k = [{'score': scores[i], 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
     return reranked_top_k
 
@@ -109,6 +122,7 @@ def find_top_snippets(query, document_text, ranker='Tf', max_snippets=3, snippet
             ranking = crossencode(query, ranking[0:max_snippets])
 
     # Return values
+    print(ranking)
     return ranking[0:max_snippets]
 
 
