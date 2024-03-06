@@ -9,7 +9,7 @@ import pyterrier as pt
 import pyterrier_dr
 
 from sentence_transformers import CrossEncoder
-from parameterized_spacy_passage_chunker import ParameterizedSpacyPassageChunker
+from src.parameterized_spacy_passage_chunker import ParameterizedSpacyPassageChunker
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
 from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded, get_output_directory
 
