@@ -155,6 +155,11 @@ if __name__ == '__main__':
 
     args = parse_arguments()
     preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset)
+    df = pd.DataFrame(preprocessed_docs)
+
+    # Saving the DataFrame to a CSV file
+    csv_file_path = '/workspaces/workshop-on-open-web-search-tu-dresden-02/preprocessed_docs.csv'
+    df.to_csv(csv_file_path, index=False)
     document_snippets = []
     print(preprocessed_docs)
     for _, i in tqdm(preprocessed_docs.iterrows(), total=preprocessed_docs.shape[0]):
