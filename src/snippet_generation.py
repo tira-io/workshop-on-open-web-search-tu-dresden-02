@@ -165,7 +165,6 @@ if __name__ == '__main__':
     csv_file_path = '/workspaces/workshop-on-open-web-search-tu-dresden-02/preprocessed_docs.csv'
     df.to_csv(csv_file_path, index=False)
     document_snippets = []
-    print(preprocessed_docs)
     for _, i in tqdm(preprocessed_docs.iterrows(), total=preprocessed_docs.shape[0]):
         document_snippets += [
             {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
