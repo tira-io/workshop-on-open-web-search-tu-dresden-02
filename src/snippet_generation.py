@@ -40,7 +40,8 @@ def rank_snippets_lexical(query, snippets_df, ranker):
     if os.path.exists('pd_index'):
         # Remove the directory and all its contents
         shutil.rmtree('pd_index')
-    pd_indexer = pt.DFIndexer("./pd_index")
+
+    pd_indexer = pt.DFIndexer(index_path="memory_index",type=pt.index.IndexingType.MEMORY)
     indexref3 = pd_indexer.index(snippets_df["text"], snippets_df["docno"])
     index = pt.IndexFactory.of(indexref3)
     retrieved = pt.BatchRetrieve(index, controls={"wmodel": ranker})
@@ -60,7 +61,6 @@ def rank_snippets_lexical(query, snippets_df, ranker):
     result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text']}, axis=1)
 
     return result_list.tolist()
-
 
 def crossencode(query, top_k_snippets):
     top_k_texts = [d['text'] for d in top_k_snippets]
