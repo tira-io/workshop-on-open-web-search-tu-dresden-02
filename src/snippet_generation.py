@@ -65,6 +65,7 @@ def crossencode(ret):
         newsnippets = []
         for score, snippet in zip(scores,obj['snippets']):
             snippet['score'] = score
+            snippet['wmodel'] = 'cross_encode'
             newsnippets.append(snippet)
         obj['snippets'] = newsnippets
         results.append(obj)
@@ -85,7 +86,7 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
     return result_list.tolist()
 
-def find_top_snippets_for_all_documents(qid, query, documents, wmodel):
+def find_top_snippets_for_all_documents(qid, query, documents, wmodel, cross_encode):
     query = pt_tokenise(query)
     df = []
     covered_docnos = set()
@@ -116,7 +117,8 @@ def find_top_snippets_for_all_documents(qid, query, documents, wmodel):
                  'docno': docno,
                  'snippets': sorted(snippets, key=lambda j: j['score'], reverse=True)[:3]
                  }]
-
+    if cross_encode:
+        crossencode(ret)
     return ret
 
 
@@ -142,14 +144,14 @@ if __name__ == '__main__':
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
-    re_rank_dataset = pd.read_json('rerank-01.json.gz', lines=True, chunksize=1000).read()
+    #re_rank_dataset = pd.read_json('rerank-01.json.gz', lines=True, chunksize=1000).read()
 
     args = parse_arguments()
     preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset, args.snippet_size)
     
     document_snippets = []
     for qid, i in tqdm(preprocessed_docs.items()):
-        document_snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], args.retrieval)
+        document_snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], args.retrieval, args.cross_encode)
         #[
         #    {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
         #                                                                         args.top_snippets)}]
