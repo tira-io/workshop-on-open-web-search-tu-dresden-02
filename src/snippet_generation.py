@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import argparse
+import re
 import shutil
 from pathlib import Path
 
@@ -14,10 +15,8 @@ from sentence_transformers import CrossEncoder
 from src.parameterized_spacy_passage_chunker import ParameterizedSpacyPassageChunker
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
 from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded, get_output_directory
-from spacy.lang.en import English
 
 ensure_pyterrier_is_loaded()
-spacy_tokenizer = English().tokenizer
 
 
 def split_into_snippets(document_text, snippet_size=250):
@@ -103,7 +102,8 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
 def find_top_snippets(query, document_text, ranker='Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
     # Check if document or query is empty
-    if len(spacy_tokenizer(document_text)) == 0 or len(spacy_tokenizer(query)) == 0:
+    regexp = re.compile(r'[a-z A-Z0-9]')
+    if not regexp.search(document_text) or not regexp.search(query):
         return []
 
     # First: split document_text into snippets
