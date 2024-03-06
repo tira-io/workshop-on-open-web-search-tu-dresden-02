@@ -18,6 +18,9 @@ from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_
 
 ensure_pyterrier_is_loaded()
 
+tokeniser = pt.autoclass("org.terrier.indexing.tokenisation.Tokeniser").getTokeniser()
+def pt_tokenise(text):
+    return ' '.join(tokeniser.getTokens(text))
 
 def split_dataframe_into_snippets(documents: pd.DataFrame, snippet_size=250) -> pd.DataFrame:
     document_list = documents.rename(columns={'text': 'contents'}).to_dict('records')
@@ -47,21 +50,13 @@ def transform_snippet_format(snippets):
 
 
 def rank_snippets_lexical(query, snippets_df, ranker):
-    if os.path.exists('pd_index'):
-        # Remove the directory and all its contents
-        shutil.rmtree('pd_index')
-
     pd_indexer = pt.DFIndexer(index_path="memory_index",type=pt.index.IndexingType.MEMORY)
     indexref3 = pd_indexer.index(snippets_df["text"], snippets_df["docno"])
     index = pt.IndexFactory.of(indexref3)
     retrieved = pt.BatchRetrieve(index, controls={"wmodel": ranker})
 
     #remove ? due to error in terrier query parser
-    query = query.replace('?', '')
-    if os.path.exists('pd_index'):
-        # Remove the directory and all its contents
-        shutil.rmtree('pd_index')
-
+    query = pt_tokenise(query)
     result = retrieved.search(query)
 
     merged_df = pd.merge(snippets_df, result, on='docno')
@@ -109,16 +104,14 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
     return result_list.tolist()
 
 
-def find_top_snippets(query, document_text, ranker='Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
+def find_top_snippets(query, snippets, ranker='Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
     # Check if document or query is empty
-    regexp = re.compile(r'[a-zA-Z0-9]')
-    if not regexp.search(document_text) or not regexp.search(query):
+    regexp = re.compile(r'[a-zA-Z0-9]') 
+    if not regexp.search(snippets) or not regexp.search(query):
         return []
 
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
-
-    snippets = split_into_snippets(document_text, snippet_size)
 
     # Second: transform snippet format from output of split_into_snippets to input of rank_snippets
 
@@ -158,14 +151,15 @@ def parse_arguments():
 if __name__ == '__main__':
     # In the TIRA sandbox, this is the injected re-ranking dataset, injected via the environment variable TIRA_INPUT_DIRECTORY
     re_rank_dataset = load_rerank_data(default='workshop-on-open-web-search/re-ranking-20231027-training')
-
+    print(re_rank_dataset)
     # Alternatively, you could use the scored docs of ir_datasets, e.g.:
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
     args = parse_arguments()
+    preprocessed_docs = split_into_snippets(re_rank_dataset)
     document_snippets = []
-    for _, i in re_rank_dataset.iterrows():
+    for _, i in preprocessed_docs:
         document_snippets += [
             {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
                                                                                  args.top_snippets, args.snippet_size,
