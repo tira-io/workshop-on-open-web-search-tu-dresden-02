@@ -92,12 +92,11 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
     colbert_model = pyterrier_dr.TctColBert('sentence-transformers/all-MiniLM-L12-v2')
     docs_df['qid'] = '0'
     docs_df['query'] = query
-    #print(docs_df)
+    
     result_df = colbert_model(docs_df)
-    #print(result_df)
+
     merged_df = pd.merge(docs_df, result_df, on='docno')
     merged_df = merged_df.sort_values('score', ascending=False)
-    #print(merged_df)
 
     # Convert to list of dictionaries
     result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text_x']}, axis=1)
@@ -108,7 +107,7 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 def find_top_snippets(query, snippets, ranker='Tf', max_snippets=3, use_crossencoder=True):
     # check if query is empty
     regexp = re.compile(r'[a-zA-Z0-9]')
-    if regexp.search(query):
+    if not regexp.search(query):
         return []
 
     # First: split document_text into snippets
@@ -131,7 +130,6 @@ def find_top_snippets(query, snippets, ranker='Tf', max_snippets=3, use_crossenc
             ranking = crossencode(query, ranking[0:max_snippets])
 
     # Return values
-    print(ranking)
     return ranking[0:max_snippets]
 
 
@@ -151,27 +149,23 @@ def parse_arguments():
 
 if __name__ == '__main__':
     # In the TIRA sandbox, this is the injected re-ranking dataset, injected via the environment variable TIRA_INPUT_DIRECTORY
-    #re_rank_dataset = load_rerank_data(default='workshop-on-open-web-search/re-ranking-20231027-training')
+    re_rank_dataset = load_rerank_data(default='workshop-on-open-web-search/re-ranking-20231027-training')
 
     # Alternatively, you could use the scored docs of ir_datasets, e.g.:
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
-    re_rank_dataset = pd.read_json('rerank.json', lines=True, chunksize=1000).read()
+    #re_rank_dataset = pd.read_json('rerank.json', lines=True, chunksize=1000).read()
 
     args = parse_arguments()
     preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset, args.snippet_size)
-    df = pd.DataFrame(preprocessed_docs)
-
-    # Saving the DataFrame to a CSV file
-    csv_file_path = '/workspaces/workshop-on-open-web-search-tu-dresden-02/preprocessed_docs.csv'
-    df.to_csv(csv_file_path, index=False)
+    
     document_snippets = []
     for _, i in tqdm(preprocessed_docs.iterrows(), total=preprocessed_docs.shape[0]):
         document_snippets += [
             {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
                                                                                  args.top_snippets)}]
-
+        
     document_snippets = pd.DataFrame(document_snippets)
 
     # The expected output directory, injected via the environment variable TIRA_OUTPUT_DIRECTORY
