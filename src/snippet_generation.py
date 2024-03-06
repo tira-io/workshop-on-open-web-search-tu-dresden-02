@@ -26,6 +26,7 @@ def split_dataframe_into_snippets(documents: pd.DataFrame, snippet_size=250) -> 
     document_list = documents.apply(
         lambda row: {'docno': row['docno'], 'contents': row['text'], 'query': row['query', 'qid': row['qid']]},
         axis=1).toList()
+    print(document_list)
 
     chunker = ParameterizedSpacyPassageChunker(snippet_size)
     document_list = chunker.process_batch(document_list)
@@ -153,13 +154,13 @@ def parse_arguments():
 if __name__ == '__main__':
     # In the TIRA sandbox, this is the injected re-ranking dataset, injected via the environment variable TIRA_INPUT_DIRECTORY
     re_rank_dataset = load_rerank_data(default='workshop-on-open-web-search/re-ranking-20231027-training')
-    print(re_rank_dataset)
+    #print(re_rank_dataset)
     # Alternatively, you could use the scored docs of ir_datasets, e.g.:
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
     args = parse_arguments()
-    preprocessed_docs = split_into_snippets(re_rank_dataset)
+    preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset)
     document_snippets = []
     for _, i in preprocessed_docs:
         document_snippets += [
