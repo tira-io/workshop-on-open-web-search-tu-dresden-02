@@ -106,6 +106,10 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
 
 def find_top_snippets(query, snippets, ranker='Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
+    # check if query is empty
+    regexp = re.compile(r'[a-zA-Z0-9]')
+    if regexp.search(query):
+        return []
 
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
