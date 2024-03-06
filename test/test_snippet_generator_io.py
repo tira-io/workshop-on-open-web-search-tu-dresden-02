@@ -1,6 +1,6 @@
 import unittest
 from approvaltests import verify_as_json
-from src.snippet_generation import split_into_snippets, transform_snippet_format
+from src.snippet_generation import split_into_snippets
 
 
 class SnippetGeneratorIOTest(unittest.TestCase):
@@ -29,4 +29,5 @@ class SnippetGeneratorIOTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pass
+    #unittest.main()

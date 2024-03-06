@@ -28,8 +28,14 @@ def split_dataframe_into_snippets(documents: pd.DataFrame, snippet_size=250) -> 
 
     chunker = ParameterizedSpacyPassageChunker(snippet_size)
     document_list = chunker.process_batch(document_list)
+    ret = {}
+    for i in document_list:
+        if i['qid'] not in ret:
+            ret[i['qid']] = {'query': i['query'], 'documents': {}}
 
-    return pd.DataFrame(document_list).rename(columns={'contents': 'text'})
+        ret[i['qid']]['documents'][i['docno']] = i['contents']
+
+    return ret
 
 
 def split_into_snippets(document_text: str, snippet_size=250) -> list[dict]:
@@ -42,51 +48,27 @@ def split_into_snippets(document_text: str, snippet_size=250) -> list[dict]:
     }])[0]['contents']
 
 
-def transform_snippet_format(snippets):
-    df = pd.DataFrame({
-        'docno': [str(snippet['id']) for snippet in snippets],
-        'text': [snippet['body'] for snippet in snippets]
-    })
-    return df
+def crossencode(ret):
+    results = []
+    for obj in ret:
+        pairs = [(obj['query'],s['text'])for s in obj['snippets']]
+        model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
+        features = tokenizer(pairs,  padding=True, truncation=True, return_tensors="pt")
 
-def rank_snippets_lexical(query, snippets_df, ranker):
-    pd_indexer = pt.DFIndexer(index_path="memory_index",type=pt.index.IndexingType.MEMORY)
-    indexref3 = pd_indexer.index(snippets_df["text"], snippets_df["docno"])
-    index = pt.IndexFactory.of(indexref3)
-    retrieved = pt.BatchRetrieve(index, controls={"wmodel": ranker})
+        model.eval()
+        with torch.no_grad(): 
+            scores = model(**features).logits
+            scores = scores.flatten().tolist()
 
-    #remove ? due to error in terrier query parser
-    query = pt_tokenise(query)
-    result = retrieved.search(query)
-
-    merged_df = pd.merge(snippets_df, result, on='docno')
-    merged_df = merged_df.sort_values('score', ascending=False)
-
-    # Convert to list of dictionaries
-    result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text']}, axis=1)
-
-    return result_list.tolist()
-
-def crossencode(query, top_k_snippets):
-    top_k_texts = [d['text'] for d in top_k_snippets]
-    #model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512)
-    pairs = [(query, doc) for doc in top_k_texts]
-
-    model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
-    tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
-
-    features = tokenizer(pairs,  padding=True, truncation=True, return_tensors="pt")
-
-    model.eval()
-    with torch.no_grad():
-        scores = model(**features).logits
-        scores = scores.flatten().tolist()
-
-    #scores = model.predict(pairs)
-    reranked_top_k = [{'score': scores[i], 'text': top_k_texts[i]} for i in range(len(top_k_texts))]
-    return reranked_top_k
-
+        newsnippets = []
+        for score, snippet in zip(scores,obj['snippets']):
+            snippet['score'] = score
+            newsnippets.append(snippet)
+        obj['snippets'] = newsnippets
+        results.append(obj)
+    return results    
 
 def colbert_pipeline(docs_df: pd.DataFrame, query):
     colbert_model = pyterrier_dr.TctColBert('sentence-transformers/all-MiniLM-L12-v2')
@@ -103,34 +85,39 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
     return result_list.tolist()
 
+def find_top_snippets_for_all_documents(qid, query, documents, wmodel):
+    query = pt_tokenise(query)
+    df = []
+    covered_docnos = set()
+    for docno, passages in documents.items():
+        for passage in passages:
+            covered_docnos.add(docno + '_' + str(passage['id']))
+            df += [{
+                'qid': str(qid),
+                'query': query,
+                'docno': docno + '_' + str(passage['id']),
+                'original_docno': docno,
+                'text': passage['body']
+                }]
+    df = pd.DataFrame(df)
+    textscorer = pt.batchretrieve.TextScorer(takes="docs", body_attr="text", wmodel=wmodel)
+    rtr = textscorer.transform(df)
+    ret_docs = {}
 
-def find_top_snippets(query, snippets, ranker='Tf', max_snippets=3, use_crossencoder=True):
-    # check if query is empty
-    regexp = re.compile(r'[a-zA-Z0-9]')
-    if not regexp.search(query):
-        return []
+    for _, i in rtr.iterrows():
+        if i['original_docno'] not in ret_docs:
+            ret_docs[i['original_docno']] = []
+        ret_docs[i['original_docno']] += [{'wmodel': wmodel, 'score': i['score'], 'text': i['text']}]
+    
+    ret = []
+    for docno, snippets in ret_docs.items():
+        ret += [{'qid': qid, 
+                 'query': query, 
+                 'docno': docno,
+                 'snippets': sorted(snippets, key=lambda j: j['score'], reverse=True)[:3]
+                 }]
 
-    # First: split document_text into snippets
-    # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
-
-    # Second: transform snippet format from output of split_into_snippets to input of rank_snippets
-
-    snippets_df = transform_snippet_format(snippets)
-
-    # Third: rank snippets
-
-    if ranker in ('BM25', 'PL2', 'Tf'):
-        ranking = rank_snippets_lexical(query, snippets_df, ranker)
-        if use_crossencoder:
-            ranking = crossencode(query, ranking[0:max_snippets])
-    elif ranker == 'ColBERT':
-        #non functional
-        ranking = colbert_pipeline(snippets_df, [query])
-        if use_crossencoder:
-            ranking = crossencode(query, ranking[0:max_snippets])
-
-    # Return values
-    return ranking[0:max_snippets]
+    return ret
 
 
 def parse_arguments():
@@ -155,16 +142,17 @@ if __name__ == '__main__':
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
-    #re_rank_dataset = pd.read_json('rerank.json', lines=True, chunksize=1000).read()
+    re_rank_dataset = pd.read_json('rerank-01.json.gz', lines=True, chunksize=1000).read()
 
     args = parse_arguments()
     preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset, args.snippet_size)
     
     document_snippets = []
-    for _, i in tqdm(preprocessed_docs.iterrows(), total=preprocessed_docs.shape[0]):
-        document_snippets += [
-            {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
-                                                                                 args.top_snippets)}]
+    for qid, i in tqdm(preprocessed_docs.items()):
+        document_snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], args.retrieval)
+        #[
+        #    {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
+        #                                                                         args.top_snippets)}]
         
     document_snippets = pd.DataFrame(document_snippets)
 
