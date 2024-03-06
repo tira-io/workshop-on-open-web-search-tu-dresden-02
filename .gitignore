@@ -10,3 +10,6 @@
 
 #colbert indexes
 *.np
+
+#dataframe outputs
+*.csv
