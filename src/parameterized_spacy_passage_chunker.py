@@ -1,5 +1,6 @@
 # adapted from passage_chunkers.spacy_passage_chunker
 # https://github.com/grill-lab/trec-cast-tools/blob/master/corpus_processing/passage_chunkers/spacy_passage_chunker.py
+import re
 
 import spacy
 from tqdm import tqdm
@@ -25,6 +26,8 @@ class ParameterizedSpacyPassageChunker(AbstractPassageChunker):
         :param document_batch: List of documents. Documents are dicts - content must be at 'contents' key.
         :return: List of documents. Documents are dicts - snippets can be found at 'contents' key.
         """
+        regexp = re.compile(r'[a-zA-Z0-9]')
+        document_batch = filter(lambda doc: regexp.search(doc['contents']), document_batch)
         batch_document_texts = [document['contents'] for document in document_batch]
         processed_document_texts = nlp.pipe(batch_document_texts, n_process=1)
 
