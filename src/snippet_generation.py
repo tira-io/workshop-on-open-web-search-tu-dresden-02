@@ -102,7 +102,7 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
 def find_top_snippets(query, document_text, ranker='Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
     # Check if document or query is empty
-    regexp = re.compile(r'[a-z A-Z0-9]')
+    regexp = re.compile(r'[a-zA-Z0-9]')
     if not regexp.search(document_text) or not regexp.search(query):
         return []
 
