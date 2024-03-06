@@ -9,14 +9,14 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         query_doc_pair = json.load(open('test/test-rerank-example-01.json'))
         document = query_doc_pair['text']
         query = query_doc_pair['query']
-        actual = find_top_snippets(query, document, 'PL2', 3)
+        actual = find_top_snippets(query, document, ranker='PL2', max_snippets=3, use_crossencoder=False)
         verify_as_json(actual)
 
     def test_top_snippets_example_01_tf(self):
         query_doc_pair = json.load(open('test/test-rerank-example-01.json'))
         document = query_doc_pair['text']
         query = query_doc_pair['query']
-        actual = find_top_snippets(query, document, 'Tf', 3)
+        actual = find_top_snippets(query, document, ranker='Tf', max_snippets=3, use_crossencoder=False)
         verify_as_json(actual) 
 
 
@@ -24,7 +24,7 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         query_doc_pair = json.load(open('test/test-rerank-example-02.json'))
         document = query_doc_pair['text']
         query = query_doc_pair['query']
-        actual = find_top_snippets(query, document, 'PL2', 30)
+        actual = find_top_snippets(query, document, ranker='PL2', max_snippets=30, use_crossencoder=False)
         verify_as_json(actual)
 
 
@@ -32,7 +32,7 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         query_doc_pair = json.load(open('test/test-rerank-example-02.json'))
         document = query_doc_pair['text']
         query = query_doc_pair['query']
-        actual = find_top_snippets(query, document, 'Tf', 30)
+        actual = find_top_snippets(query, document, ranker='Tf', max_snippets=30, use_crossencoder=False)
         verify_as_json(actual)
 
 
@@ -41,7 +41,7 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         query_doc_pair = json.load(open('test/test-rerank-example-03.json'))
         document = query_doc_pair['text']
         query = query_doc_pair['query']
-        actual = find_top_snippets(query, document, 'PL2', 30)
+        actual = find_top_snippets(query, document, ranker='PL2', max_snippets=30, use_crossencoder=False)
         verify_as_json(actual)
 
 
@@ -49,7 +49,7 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         query_doc_pair = json.load(open('test/test-rerank-example-03.json'))
         document = query_doc_pair['text']
         query = query_doc_pair['query']
-        actual = find_top_snippets(query, document, 'Tf', 30)
+        actual = find_top_snippets(query, document, ranker='Tf', max_snippets=30, use_crossencoder=False)
         verify_as_json(actual)
 
 
@@ -57,7 +57,7 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         query_doc_pair = json.load(open('test/test-rerank-example-04.json'))
         document = query_doc_pair['text']
         query = query_doc_pair['query']
-        actual = find_top_snippets(query, document, 'PL2', 30)
+        actual = find_top_snippets(query, document, ranker='PL2', max_snippets=30, use_crossencoder=False)
         verify_as_json(actual)
 
 
@@ -65,7 +65,7 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         query_doc_pair = json.load(open('test/test-rerank-example-04.json'))
         document = query_doc_pair['text']
         query = query_doc_pair['query']
-        actual = find_top_snippets(query, document, 'Tf', 30)
+        actual = find_top_snippets(query, document, ranker='Tf', max_snippets=30, use_crossencoder=False)
         verify_as_json(actual)
 
 
