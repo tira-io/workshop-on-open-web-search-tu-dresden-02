@@ -12,7 +12,6 @@ import pandas as pd
 import pyterrier as pt
 import pyterrier_dr
 
-from sentence_transformers import CrossEncoder
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
 from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded, get_output_directory
 
@@ -93,12 +92,10 @@ def split_into_snippets(document_text: str, snippet_size=250) -> list[dict]:
     }])[0]['contents']
 
 
-def crossencode(ret):
+def crossencode(ret, model, tokenizer):
     results = []
     for obj in ret:
         pairs = [(obj['query'],s['text'])for s in obj['snippets']]
-        model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
-        tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
         features = tokenizer(pairs,  padding=True, truncation=True, return_tensors="pt")
 
@@ -131,7 +128,7 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
     return result_list.tolist()
 
-def find_top_snippets_for_all_documents(qid, query, documents, wmodel, cross_encode):
+def find_top_snippets_for_all_documents(qid, query, documents, wmodel, cross_encode, model=None, tokenizer=None):
     query = pt_tokenise(query)
     df = []
     covered_docnos = set()
@@ -162,8 +159,8 @@ def find_top_snippets_for_all_documents(qid, query, documents, wmodel, cross_enc
                  'docno': docno,
                  'snippets': sorted(snippets, key=lambda j: j['score'], reverse=True)[:3]
                  }]
-    if cross_encode:
-        crossencode(ret)
+    if cross_encode and model and tokenizer:
+        crossencode(ret, model, tokenizer)
     return ret
 
 
@@ -195,11 +192,16 @@ if __name__ == '__main__':
     preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset, args.snippet_size)
     
     document_snippets = []
+
+    model, tokenizer = None, None
+    if args.cross_encode:
+        print('Loading cross-encoder model')
+        model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        print('Done cross-encoder model is loaded.')
+
     for qid, i in tqdm(preprocessed_docs.items()):
-        document_snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], args.retrieval, args.cross_encode)
-        #[
-        #    {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
-        #                                                                         args.top_snippets)}]
+        document_snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], args.retrieval, args.cross_encode, model=model, tokenizer=tokenizer)
         
     document_snippets = pd.DataFrame(document_snippets)
 
