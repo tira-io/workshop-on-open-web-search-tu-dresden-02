@@ -105,7 +105,11 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
     return result_list.tolist()
 
 
-def find_top_snippets(query, snippets, ranker='Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
+def find_top_snippets(query, snippets, ranker='Tf', max_snippets=3, use_crossencoder=True):
+    # check if query is empty
+    regexp = re.compile(r'[a-zA-Z0-9]')
+    if regexp.search(query):
+        return []
 
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
@@ -154,7 +158,7 @@ if __name__ == '__main__':
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
 
     args = parse_arguments()
-    preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset)
+    preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset, args.snippet_size)
     df = pd.DataFrame(preprocessed_docs)
 
     # Saving the DataFrame to a CSV file
@@ -165,8 +169,7 @@ if __name__ == '__main__':
     for _, i in tqdm(preprocessed_docs.iterrows(), total=preprocessed_docs.shape[0]):
         document_snippets += [
             {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
-                                                                                 args.top_snippets, args.snippet_size,
-                                                                                 args.cross_encode)}]
+                                                                                 args.top_snippets)}]
 
     document_snippets = pd.DataFrame(document_snippets)
 
