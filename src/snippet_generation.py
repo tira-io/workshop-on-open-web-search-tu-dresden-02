@@ -20,9 +20,7 @@ ensure_pyterrier_is_loaded()
 
 
 def split_dataframe_into_snippets(documents: pd.DataFrame, snippet_size=250) -> pd.DataFrame:
-    document_list = documents.apply(
-        lambda row: {'docno': row['docno'], 'contents': row['text'], 'query': row['query', 'qid': row['qid']]},
-        axis=1).toList()
+    document_list = documents.rename(columns={'text': 'contents'}).to_dict('records')
 
     chunker = ParameterizedSpacyPassageChunker(snippet_size)
     document_list = chunker.process_batch(document_list)
