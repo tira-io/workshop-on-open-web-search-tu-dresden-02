@@ -151,11 +151,13 @@ def parse_arguments():
 
 if __name__ == '__main__':
     # In the TIRA sandbox, this is the injected re-ranking dataset, injected via the environment variable TIRA_INPUT_DIRECTORY
-    re_rank_dataset = load_rerank_data(default='workshop-on-open-web-search/re-ranking-20231027-training')
+    #re_rank_dataset = load_rerank_data(default='workshop-on-open-web-search/re-ranking-20231027-training')
 
     # Alternatively, you could use the scored docs of ir_datasets, e.g.:
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
+
+    re_rank_dataset = pd.read_json('rerank.json', lines=True, chunksize=1000).read()
 
     args = parse_arguments()
     preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset, args.snippet_size)
