@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from tqdm import tqdm
 import torch
 import pandas as pd
 import pyterrier as pt
@@ -105,10 +106,6 @@ def colbert_pipeline(docs_df: pd.DataFrame, query):
 
 
 def find_top_snippets(query, snippets, ranker='Tf', max_snippets=3, snippet_size=250, use_crossencoder=True):
-    # Check if document or query is empty
-    regexp = re.compile(r'[a-zA-Z0-9]') 
-    if not regexp.search(snippets) or not regexp.search(query):
-        return []
 
     # First: split document_text into snippets
     # https://github.com/grill-lab/trec-cast-tools/tree/master/corpus_processing/passage_chunkers
@@ -159,7 +156,8 @@ if __name__ == '__main__':
     args = parse_arguments()
     preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset)
     document_snippets = []
-    for _, i in preprocessed_docs:
+    print(preprocessed_docs)
+    for _, i in tqdm(preprocessed_docs.iterrows(), total=preprocessed_docs.shape[0]):
         document_snippets += [
             {'qid': i['qid'], 'docno': i['docno'], 'snippets': find_top_snippets(i['query'], i['text'], args.retrieval,
                                                                                  args.top_snippets, args.snippet_size,
