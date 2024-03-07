@@ -1,1 +1,14 @@
-[]
+[
+    {
+        "docno": "docno",
+        "qid": "1",
+        "query": "",
+        "snippets": [
+            {
+                "score": 0,
+                "text": " fghjklljhjgh ",
+                "wmodel": "PL2"
+            }
+        ]
+    }
+]

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-import os
 import argparse
 import re
-import shutil
 from pathlib import Path
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -11,6 +9,10 @@ import torch
 import pandas as pd
 import pyterrier as pt
 import pyterrier_dr
+import spacy
+
+from passage_chunkers.abstract_passage_chunker import AbstractPassageChunker
+
 
 # Load a patched ir_datasets that loads the injected data inside the TIRA sandbox
 from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_loaded, get_output_directory
@@ -26,14 +28,6 @@ tokeniser = pt.autoclass("org.terrier.indexing.tokenisation.Tokeniser").getToken
 def pt_tokenise(text):
     return ' '.join(tokeniser.getTokens(text))
 
-# adapted from passage_chunkers.spacy_passage_chunker
-# https://github.com/grill-lab/trec-cast-tools/blob/master/corpus_processing/passage_chunkers/spacy_passage_chunker.py
-import re
-
-import spacy
-from tqdm import tqdm
-
-from passage_chunkers.abstract_passage_chunker import AbstractPassageChunker
 
 nlp = spacy.load("en_core_web_sm", exclude=[
     "parser", "tagger", "ner", "attribute_ruler", "lemmatizer", "tok2vec"])
@@ -43,6 +37,7 @@ nlp.max_length = 2000000  # for documents that are longer than the spacy charact
 
 class ParameterizedSpacyPassageChunker(AbstractPassageChunker):
     """
+    Adapted from https://github.com/grill-lab/trec-cast-tools/blob/master/corpus_processing/passage_chunkers/spacy_passage_chunker.py
     Basically the same as #SpacyPassageChunker. Only difference is that the snippet size can be set in #__init__
     """
     def __init__(self, snippet_size=250):
@@ -55,7 +50,7 @@ class ParameterizedSpacyPassageChunker(AbstractPassageChunker):
         :return: List of documents. Documents are dicts - snippets can be found at 'contents' key.
         """
         regexp = re.compile(r'[a-zA-Z0-9]')
-        filter(lambda doc: regexp.search(doc['contents']), document_batch)
+        document_batch = list(filter(lambda doc: regexp.search(doc['contents']), document_batch))
         batch_document_texts = [document['contents'] for document in document_batch]
         processed_document_texts = nlp.pipe(batch_document_texts, n_process=1)
 
