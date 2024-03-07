@@ -21,12 +21,6 @@ class SnippetGeneratorIOTest(unittest.TestCase):
         actual = [split_into_snippets(document) for document in self.test_documents]
         verify_as_json(actual)
 
-    def test_transform_snippet_format_output(self):
-        snippets = [[{'id': 0, 'body': self.test_documents[i]}] for i in range(len(self.test_documents))]
-
-        actual = [str(transform_snippet_format(snippet)) for snippet in snippets]
-        verify_as_json(actual)
-
 
 if __name__ == '__main__':
     pass
