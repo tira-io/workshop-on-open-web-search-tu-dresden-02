@@ -88,6 +88,35 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         actual = self.run_sample('test/test-rerank-example-02.json', wmodel='BM25', cross_encode=True)
         verify_as_json(actual)
 
+    def test_top_snippets_example_03_pl2(self):
+        actual = self.run_sample('test/test-rerank-example-03.json', wmodel='PL2', cross_encode=False)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_03_tf(self):
+        actual = self.run_sample('test/test-rerank-example-03.json', wmodel='Tf', cross_encode=False)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_03_bm25(self):
+        actual = self.run_sample('test/test-rerank-example-03.json', wmodel='BM25', cross_encode=False)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_03_pl2_cross_encoder(self):
+        actual = self.run_sample('test/test-rerank-example-03.json', wmodel='PL2', cross_encode=True)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_03_tf_cross_encoder(self):
+        actual = self.run_sample('test/test-rerank-example-03.json', wmodel='Tf', cross_encode=True)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_03_bm25_cross_encoder(self):
+        actual = self.run_sample('test/test-rerank-example-03.json', wmodel='BM25', cross_encode=True)
+        verify_as_json(actual)
+
 
 if __name__ == '__main__':
     unittest.main()
