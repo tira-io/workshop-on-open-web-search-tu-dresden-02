@@ -17,6 +17,11 @@ from tira.third_party_integrations import load_rerank_data, ensure_pyterrier_is_
 
 ensure_pyterrier_is_loaded()
 
+if torch.cuda.is_available():
+    device = 'cuda'
+else:
+    device = 'cpu'
+
 tokeniser = pt.autoclass("org.terrier.indexing.tokenisation.Tokeniser").getTokeniser()
 def pt_tokenise(text):
     return ' '.join(tokeniser.getTokens(text))
@@ -91,27 +96,26 @@ def split_into_snippets(document_text: str, snippet_size=250) -> list[dict]:
         "contents": document_text
     }])[0]['contents']
 
-
 def crossencode(ret, model, tokenizer):
-    results = []
+    pairs = []
     for obj in ret:
-        pairs = [(obj['query'],s['text'])for s in obj['snippets']]
+        for s in obj['snippets']:
+            pairs += (obj['query'],s['text'])
 
-        features = tokenizer(pairs,  padding=True, truncation=True, return_tensors="pt")
+    features = tokenizer(pairs,  padding=True, truncation=True, return_tensors="pt").to(device)
 
-        model.eval()
-        with torch.no_grad(): 
+    model.eval()
+    with torch.no_grad(): 
             scores = model(**features).logits
             scores = scores.flatten().tolist()
 
-        newsnippets = []
-        for score, snippet in zip(scores,obj['snippets']):
-            snippet['score'] = score
-            snippet['wmodel'] = 'cross_encode'
-            newsnippets.append(snippet)
-        obj['snippets'] = newsnippets
-        results.append(obj)
-    return results    
+    score_index = 0
+
+    for doc in ret:
+        for snippet in doc["snippets"]:
+            snippet["score"] = scores[score_index]
+            score_index += 1
+    return ret
 
 def colbert_pipeline(docs_df: pd.DataFrame, query):
     colbert_model = pyterrier_dr.TctColBert('sentence-transformers/all-MiniLM-L12-v2')
@@ -196,7 +200,7 @@ if __name__ == '__main__':
     model, tokenizer = None, None
     if args.cross_encode:
         print('Loading cross-encoder model')
-        model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2').to(device)
         tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
         print('Done cross-encoder model is loaded.')
 
