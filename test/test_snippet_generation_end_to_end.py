@@ -1,7 +1,6 @@
 import unittest
 import pandas as pd
 from approvaltests import verify_as_json
-import json
 from src.snippet_generation import find_top_snippets_for_all_documents, split_dataframe_into_snippets
 
 
@@ -28,6 +27,36 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         for qid, i in preprocessed_docs.items():
             snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], wmodel=wmodel, cross_encode=cross_encode)
         return snippets
+
+
+    def test_top_snippets_example_01_pl2(self):
+        actual = self.run_sample('test/test-rerank-example-01.json', wmodel='PL2', cross_encode=False)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_01_tf(self):
+        actual = self.run_sample('test/test-rerank-example-01.json', wmodel='Tf', cross_encode=False)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_01_bm25(self):
+        actual = self.run_sample('test/test-rerank-example-01.json', wmodel='BM25', cross_encode=False)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_01_pl2_cross_encoder(self):
+        actual = self.run_sample('test/test-rerank-example-01.json', wmodel='PL2', cross_encode=True)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_01_tf_cross_encoder(self):
+        actual = self.run_sample('test/test-rerank-example-01.json', wmodel='Tf', cross_encode=True)
+        verify_as_json(actual)
+
+
+    def test_top_snippets_example_01_bm25_cross_encoder(self):
+        actual = self.run_sample('test/test-rerank-example-01.json', wmodel='BM25', cross_encode=True)
+        verify_as_json(actual)
 
 
     def test_top_snippets_example_02_pl2(self):
