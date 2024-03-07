@@ -1,51 +1,33 @@
 import unittest
+import pandas as pd
 from approvaltests import verify_as_json
 import json
-from src.snippet_generation import find_top_snippets_for_all_documents
+from src.snippet_generation import find_top_snippets_for_all_documents, split_dataframe_into_snippets
 
 
 class EndToEndSnippetGeneratorTest(unittest.TestCase):
     def test_top_snippet_asserts_non_empty_query(self):
-        query_doc_pair = json.load(open('test/test-rerank-example-01.json'))
-        document = query_doc_pair['text']
         query = " \n  \n "
         qid = '1'
-        documents  = [{'body': 'fghjklljhjgh' , 'id':1}]
-        actual = find_top_snippets_for_all_documents(qid, query, documents, ranker='PL2', use_crossencoder=False)
+        documents  = pd.DataFrame([{'docno': 'docno', 'contents': 'fghjklljhjgh' , 'qid': qid, 'query': query}])
+        documents = split_dataframe_into_snippets(documents)
+        actual = find_top_snippets_for_all_documents(qid, query, documents['1']['documents'], wmodel='PL2', cross_encode=False)
         verify_as_json(actual)
 
     def test_top_snippet_asserts_non_empty_document(self):
         query_doc_pair = json.load(open('test/test-rerank-example-01.json'))
-        document = " \n  \n "
         query = query_doc_pair['query']
         qid = query_doc_pair['qid']
-        documents  = [{'docno': '1' , 'contents': [{'contents':'fghj'}]}]
+        documents  = [{'docno': '1' , 'contents': [{'contents':' \n \n '}]}]
         actual = find_top_snippets_for_all_documents(qid, query, documents, ranker='PL2', use_crossencoder=False)
         verify_as_json(actual)
-
-    def test_top_snippets_example_01_pl2(self):
-        query_doc_pair = json.load(open('test/test-rerank-example-01.json'))
-        document = {'docno': '1', 'text': query_doc_pair['text']}
-        query = query_doc_pair['query']
-        qid = query_doc_pair['qid']
-        actual = find_top_snippets_for_all_documents(qid, query, documents, ranker='PL2', use_crossencoder=False)
-        verify_as_json(actual)
-
-    def test_top_snippets_example_01_tf(self):
-        query_doc_pair = json.load(open('test/test-rerank-example-01.json'))
-        document = query_doc_pair['text']
-        query = query_doc_pair['query']
-        qid = query_doc_pair['qid']
-        actual = find_top_snippets_for_all_documents(qid, query, documents, ranker='Tf', use_crossencoder=False)
-        verify_as_json(actual) 
-
 
     def test_top_snippets_example_02_pl2(self):
-        query_doc_pair = json.load(open('test/test-rerank-example-02.json'))
-        document = query_doc_pair['text']
-        query = query_doc_pair['query']
-        qid = query_doc_pair['qid']
-        actual = find_top_snippets_for_all_documents(qid, query, document, ranker='PL2', use_crossencoder=False)
+        data = pd.read_json('test/test-rerank-example-02.json', lines=True)
+        qid = data[0]['qid']
+        query = data[0]['query']
+        documents = data.drop(columns=['qid', 'query', 'original_query', 'original_document']).to_dict()
+        actual = find_top_snippets_for_all_documents(qid=qid, query=query, documents=documents, wmodel='PL2', cross_encode=False)
         verify_as_json(actual)
 
 
