@@ -15,11 +15,10 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         verify_as_json(actual)
 
     def test_top_snippet_asserts_non_empty_document(self):
-        query_doc_pair = json.load(open('test/test-rerank-example-01.json'))
-        query = query_doc_pair['query']
-        qid = query_doc_pair['qid']
-        documents  = [{'docno': '1' , 'contents': [{'contents':' \n \n '}]}]
-        actual = find_top_snippets_for_all_documents(qid, query, documents, ranker='PL2', use_crossencoder=False)
+        query = "sajfasd"
+        qid = '1'
+        documents  = pd.DataFrame([{'docno': 'docno', 'contents': ' \n \n ' , 'qid': qid, 'query': query}])
+        actual = split_dataframe_into_snippets(documents)
         verify_as_json(actual)
 
     def test_top_snippets_example_02_pl2(self):

@@ -45,7 +45,7 @@ class ParameterizedSpacyPassageChunker(AbstractPassageChunker):
         :return: List of documents. Documents are dicts - snippets can be found at 'contents' key.
         """
         regexp = re.compile(r'[a-zA-Z0-9]')
-        filter(lambda doc: regexp.search(doc['contents']), document_batch)
+        document_batch = list(filter(lambda doc: regexp.search(doc['contents']), document_batch))
         batch_document_texts = [document['contents'] for document in document_batch]
         processed_document_texts = nlp.pipe(batch_document_texts, n_process=1)
 
