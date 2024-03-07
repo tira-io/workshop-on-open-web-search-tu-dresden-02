@@ -23,11 +23,11 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
 
     def test_top_snippets_example_02_pl2(self):
         data = pd.read_json('test/test-rerank-example-02.json', lines=True)
-        qid = data[0]['qid']
-        query = data[0]['query']
-        documents = data.drop(columns=['qid', 'query', 'original_query', 'original_document']).to_dict()
-        actual = find_top_snippets_for_all_documents(qid=qid, query=query, documents=documents, wmodel='PL2', cross_encode=False)
-        verify_as_json(actual)
+        preprocessed_docs = split_dataframe_into_snippets(data)
+        snippets = []
+        for qid, i in preprocessed_docs.items():
+            snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], wmodel='PL2', cross_encode=False)
+        verify_as_json(snippets)
 
 
     def test_top_snippets_example_02_tf(self):
