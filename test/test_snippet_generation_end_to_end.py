@@ -10,7 +10,7 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         qid = '1'
         documents  = pd.DataFrame([{'docno': 'docno', 'contents': 'fghjklljhjgh' , 'qid': qid, 'query': query}])
         documents = split_dataframe_into_snippets(documents)
-        actual = find_top_snippets_for_all_documents(qid, query, documents['1']['documents'], wmodel='PL2', cross_encode=False)
+        actual = find_top_snippets_for_all_documents(qid, query, documents['1']['documents'], wmodel='PL2', do_cross_encode=False)
         verify_as_json(actual)
 
     def test_top_snippet_asserts_non_empty_document(self):
@@ -25,7 +25,7 @@ class EndToEndSnippetGeneratorTest(unittest.TestCase):
         preprocessed_docs = split_dataframe_into_snippets(data)
         snippets = []
         for qid, i in preprocessed_docs.items():
-            snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], wmodel=wmodel, cross_encode=cross_encode)
+            snippets += find_top_snippets_for_all_documents(qid, i['query'], i['documents'], wmodel=wmodel, do_cross_encode=cross_encode)
         return snippets
 
 
