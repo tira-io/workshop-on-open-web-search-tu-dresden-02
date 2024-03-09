@@ -19,9 +19,6 @@ ENV PYTHONPATH "${PYTHONPATH}:/home/trec-cast-tools/corpus_processing/"
 #install sentence transformers
 RUN pip install sentence_transformers
 
-# install colbert
-RUN pip3 install git+https://github.com/terrierteam/pyterrier_dr.git
-
 # install pytest
 RUN pip install pytest approvaltests \
 	&& python3 -c "from sentence_transformers import CrossEncoder; print(CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512))"

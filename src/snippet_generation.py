@@ -8,7 +8,6 @@ from tqdm import tqdm
 import torch
 import pandas as pd
 import pyterrier as pt
-import pyterrier_dr
 import spacy
 
 from passage_chunkers.abstract_passage_chunker import AbstractPassageChunker
@@ -82,15 +81,6 @@ def split_dataframe_into_snippets(documents: pd.DataFrame, snippet_size=250) -> 
     return ret
 
 
-def split_into_snippets(document_text: str, snippet_size=250) -> list[dict]:
-    chunker = ParameterizedSpacyPassageChunker(snippet_size)
-    return chunker.process_batch([{
-        "id": 0,
-        "url": '',
-        "title": '',
-        "contents": document_text
-    }])[0]['contents']
-
 def crossencode(ret, model, tokenizer):
     pairs = []
     for obj in ret:
@@ -112,20 +102,6 @@ def crossencode(ret, model, tokenizer):
             score_index += 1
     return ret
 
-def colbert_pipeline(docs_df: pd.DataFrame, query):
-    colbert_model = pyterrier_dr.TctColBert('sentence-transformers/all-MiniLM-L12-v2')
-    docs_df['qid'] = '0'
-    docs_df['query'] = query
-    
-    result_df = colbert_model(docs_df)
-
-    merged_df = pd.merge(docs_df, result_df, on='docno')
-    merged_df = merged_df.sort_values('score', ascending=False)
-
-    # Convert to list of dictionaries
-    result_list = merged_df.apply(lambda row: {'score': row['score'], 'text': row['text_x']}, axis=1)
-
-    return result_list.tolist()
 
 def find_top_snippets_for_all_documents(qid, query, documents, wmodel, cross_encode, model=None, tokenizer=None):
     query = pt_tokenise(query)
@@ -166,8 +142,7 @@ def find_top_snippets_for_all_documents(qid, query, documents, wmodel, cross_enc
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Argument Parser")
 
-    parser.add_argument("--retrieval", choices=["BM25", "PL2", "Tf", "ColBERT"], default="Tf", help="The retrieval "
-                                                                                                    "model")
+    parser.add_argument("--retrieval", choices=["BM25", "PL2", "Tf"], default="Tf", help="The retrieval model")
     parser.add_argument("--cross-encode", action="store_true", default=False, help="Use a cross-encoder to re-rank "
                                                                                    "the top-k passages of the "
                                                                                    "retrieval model")
@@ -184,8 +159,6 @@ if __name__ == '__main__':
     # Alternatively, you could use the scored docs of ir_datasets, e.g.:
     # from tira.third_party_integrations import ir_dataset
     # re_rank_dataset = ir_datasets.load(default='workshop-on-open-web-search/document-processing-20231027-training')
-
-    #re_rank_dataset = pd.read_json('rerank-01.json.gz', lines=True, chunksize=1000).read()
 
     args = parse_arguments()
     preprocessed_docs = split_dataframe_into_snippets(re_rank_dataset, args.snippet_size)
