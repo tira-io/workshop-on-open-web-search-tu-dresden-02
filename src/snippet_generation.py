@@ -103,8 +103,8 @@ def cross_encode(document_snippet_list: list[dict[str, str | dict[str, float | s
 
 
 def find_top_snippets_for_all_documents(query_id: str, query: str, documents: dict[str, list[dict[str, str]]],
-                                        wmodel: str, do_cross_encode: bool, model=None, tokenizer=None) -> (
-        list)[dict[str, str | dict[str, float | str]]]:
+                                        wmodel: str, top_snippets: int, do_cross_encode: bool, model=None,
+                                        tokenizer=None) -> list[dict[str, str | dict[str, float | str]]]:
     # tokenise query
     query = ' '.join(tokeniser.getTokens(query))
     df = []
@@ -177,7 +177,7 @@ if __name__ == '__main__':
 
     for qid, doc in tqdm(preprocessed_docs.items()):
         document_snippets += find_top_snippets_for_all_documents(qid, doc['query'], doc['documents'], args.retrieval,
-                                                                 args.cross_encode, model=ce_model,
+                                                                 args.top_snippets, args.cross_encode, model=ce_model,
                                                                  tokenizer=ce_tokenizer)
 
     document_snippets = pd.DataFrame(document_snippets)
