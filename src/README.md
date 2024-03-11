@@ -38,24 +38,44 @@ This final document ranking ensues from this snippet ranking in step 5, i.e., th
 
 ## Usage
 
-You can run it directly via (please install `tira` via `pip3 install tira`, Docker, and Python >= 3.7 on your machine): 
+### Starting the program
+
+First, start a docker/dev container using `src/Dockerfile`.
+Please note, that you need a lot of RAM to build the docker image from scratch.
+So if you're using GitHub Codespaces, you must switch to the 32GB machine before building. 
+Once the image is built and cached, you may switch back.  
+
+To start the snippet generation and ranking with default parameters inside the container you can use the following command:
+```shell
+./src/snippet_generation.py
+```
+The output should appear in `documents.jsonl.gz`.
+
+The output is a number of line-separated json arrays containing the `qid`, `query`, `docno` and `snippets` keys where `snippets` is an ordered list of the best snippets. 
+Each snippet is represented through a json array with keys `wmodel` (the used retrieval model for pre-ranking), `score` (the final weighting score) and `text` (the actual snippet string).
+
+### Parameters
+
+The program has several parameters which can be set using command line arguments.
+When a parameter is not set explicitly, the default value is used.
+The parameters are as follows:
+
+| Parameter      | Description                                               | Values            | Default |
+|----------------|-----------------------------------------------------------|-------------------|---------|
+| --retrieval    | Selects the retrieval model used for pre-ranking (step 2) | BM25, PL2, Tf     | Tf      |
+| --cross-encode | Switches on the cross-encoder (step 4)                    | set/not set       | not set |
+| --snippet-size | Sets the maximum snippet size in tokens.                  | positive integers | 250     |
+| --top-snippets | Sets the parameter _k_ mentioned above                    | positive integers | 3       |
+
+Therefore, a call to the program can look like this:
+```shell
+./src/snippet_generation.py --retrieval BM25 --cross-encode
+```
 
 ```shell
-tira-run \
-	--input-dataset workshop-on-open-web-search/re-ranking-20231027-training \
-	--image mam10eks/wows-baselines:re-ranker-0.0.1
+./src/snippet_generation.py --retrieval PL2 --snippet-size 200 --top-snippets 4
 ```
 
-## Development
-
-You can build the Docker image via:
-
-```
-docker build -t mam10eks/wows-baselines:re-ranker-0.0.1 .
-```
-
-To publish the image to dockerhub, run:
-
-```
-docker push mam10eks/wows-baselines:re-ranker-0.0.1
+```shell
+./src/snippet_generation.py --retrieval Tf --cross-encode --snippet-size 200 --top-snippets 3
 ```
